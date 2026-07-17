@@ -36,6 +36,8 @@ PARAMS = {
     "sre000d0": "sunshine_min",      # Sonnenscheindauer, Tagessumme (Minuten)
     "gre000d0": "radiation_wm2",     # Globalstrahlung, Tagesmittel (W/m^2)
     "fu3010d0": "wind_mean_kmh",     # Windgeschwindigkeit skalar, Tagesmittel (km/h)
+    "fu3010dn": "wind_min_kmh",      # Windgeschwindigkeit skalar, Tagesminimum (km/h)
+    "fu3010dx": "wind_max_kmh",      # Windgeschwindigkeit skalar, Tagesmaximum (km/h)
     "ure200d0": "humidity_pct",      # Relative Luftfeuchtigkeit, Tagesmittel
 }
 
