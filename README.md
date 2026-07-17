@@ -1,0 +1,2 @@
+# meteodatacollector
+Meteo Schweiz Daten
