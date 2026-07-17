@@ -3,392 +3,497 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KLO — Zürich-Kloten Wetterstation</title>
+<title>meteodatacollector — KLO</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#eef1ea;
-    --panel:#f8f9f4;
-    --ink:#1f2a37;
-    --ink-soft:#5b6674;
-    --rule:#c9d0c2;
-    --blue:#3c6e94;
-    --blue-soft:#a9c3d6;
-    --amber:#c2703d;
-    --green:#5b7f5a;
-    --grid:#dde2d5;
+    --bg: #FFFFFF;
+    --panel: #F7F8FA;
+    --line: #E3E6EA;
+    --text: #1A1D22;
+    --muted: #767E8A;
+    --accent: #E30613;
+    --gain: #1F8A6E;
+    --loss: #C0293D;
+    --radius: 3px;
   }
-  *{box-sizing:border-box;}
+
+  * { box-sizing: border-box; }
+
   body{
-    margin:0;
-    background:var(--paper);
-    background-image:
-      linear-gradient(var(--grid) 1px, transparent 1px),
-      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-    background-size:28px 28px;
-    color:var(--ink);
-    font-family:'IBM Plex Sans', sans-serif;
-  }
-  a{color:var(--blue);}
-
-  header{
-    padding:2.5rem 1.5rem 1.5rem;
-    max-width:1100px;
-    margin:0 auto;
-  }
-  .station-id{
-    font-family:'IBM Plex Sans Condensed', sans-serif;
-    font-weight:700;
-    font-size:clamp(3rem, 9vw, 6rem);
-    letter-spacing:0.02em;
-    line-height:0.9;
-    color:var(--ink);
-  }
-  .station-name{
-    font-size:1.1rem;
-    color:var(--ink-soft);
-    margin-top:0.4rem;
-  }
-  .metar{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:0.85rem;
-    color:var(--blue);
-    background:var(--panel);
-    border:1px solid var(--rule);
-    border-left:4px solid var(--amber);
-    padding:0.6rem 0.9rem;
-    margin-top:1.2rem;
-    display:inline-block;
-    white-space:pre-wrap;
-  }
-  .meta-row{
-    display:flex;
-    gap:1.5rem;
-    flex-wrap:wrap;
-    margin-top:1rem;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:0.8rem;
-    color:var(--ink-soft);
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 20px 80px;
   }
 
-  main{max-width:1100px; margin:0 auto; padding:0 1.5rem 4rem;}
+  .detail{ width: 100%; max-width: 880px; }
 
-  .cards{
-    display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
-    gap:1px;
-    background:var(--rule);
-    border:1px solid var(--rule);
-    margin:1.5rem 0 2.5rem;
-  }
-  .card{
-    background:var(--panel);
-    padding:1rem 1.1rem 1.2rem;
-  }
-  .card .label{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:0.7rem;
-    text-transform:uppercase;
-    letter-spacing:0.08em;
-    color:var(--ink-soft);
-  }
-  .card .value{
-    font-family:'IBM Plex Sans Condensed', sans-serif;
-    font-weight:700;
-    font-size:2rem;
-    margin-top:0.3rem;
-  }
-  .card .unit{
-    font-size:0.95rem;
-    font-weight:500;
-    color:var(--ink-soft);
-    margin-left:0.15rem;
-  }
-  .card .sub{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:0.75rem;
-    color:var(--ink-soft);
-    margin-top:0.35rem;
+  .eyebrow{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 18px;
+    border-bottom: 2px solid var(--accent);
   }
 
-  section.chart-section{
-    margin-bottom:2.5rem;
-    background:var(--panel);
-    border:1px solid var(--rule);
-    padding:1.2rem 1.2rem 0.8rem;
-  }
-  section.chart-section h2{
-    font-family:'IBM Plex Sans Condensed', sans-serif;
-    font-size:1rem;
-    text-transform:uppercase;
-    letter-spacing:0.06em;
-    color:var(--ink-soft);
-    margin:0 0 0.8rem;
-    font-weight:600;
-  }
-  .chart-wrap{position:relative; height:260px;}
+  .brand{ display: flex; align-items: baseline; gap: 10px; }
 
-  .range-controls{
-    display:flex;
-    gap:0.4rem;
-    margin:0 0 1.5rem;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:0.8rem;
-  }
-  .range-controls button{
-    background:var(--panel);
-    border:1px solid var(--rule);
-    color:var(--ink);
-    padding:0.35rem 0.8rem;
-    cursor:pointer;
-  }
-  .range-controls button.active{
-    background:var(--blue);
-    border-color:var(--blue);
-    color:#fff;
+  .brand h1{
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: 0.02em;
+    margin: 0;
+    text-transform: uppercase;
   }
 
-  footer{
-    max-width:1100px;
-    margin:0 auto;
-    padding:1.5rem;
-    font-size:0.8rem;
-    color:var(--ink-soft);
-    border-top:1px solid var(--rule);
+  .brand span.sub{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
   }
 
-  #status{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:0.85rem;
-    color:var(--ink-soft);
-    padding:2rem 0;
+  .status{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .dot{
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--gain);
+    box-shadow: 0 0 0 3px rgba(31,138,110,0.15);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  .dot.stale{ background: var(--muted); box-shadow: none; animation: none; }
+  @media (prefers-reduced-motion: reduce){ .dot{ animation: none; } }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.45;} }
+
+  table{ width: 100%; border-collapse: collapse; margin-top: 4px; }
+
+  thead th{
+    text-align: left;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    padding: 14px 10px 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  thead th.num{ text-align: right; }
+
+  tbody td{
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+    vertical-align: middle;
+  }
+
+  .price, .time{ font-family: 'IBM Plex Mono', monospace; text-align: right; color: var(--text); white-space: nowrap; }
+  .time{ color: var(--muted); font-size: 13px; text-align: left; }
+
+  .empty, .error{
+    padding: 40px 10px; text-align: center; color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace; font-size: 13px;
+  }
+  .error{ color: var(--loss); }
+
+  .detail-header{ padding-bottom: 18px; border-bottom: 2px solid var(--accent); }
+
+  .detail-header h2{
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 24px;
+    margin: 0 0 4px;
+  }
+
+  .detail-sub{ font-family: 'Inter', sans-serif; font-size: 14px; color: var(--muted); margin: 0 0 12px; }
+
+  .detail-returns{ display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+
+  .return-box{
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 10px 14px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); min-width: 108px; flex: 1 1 108px;
+  }
+
+  .return-label{
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--muted);
+  }
+
+  .return-value{ font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600; }
+  .return-value.up{ color: var(--gain); }
+  .return-value.down{ color: var(--loss); }
+  .return-value.flat{ color: var(--text); }
+
+  .return-abs{ font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); }
+  .return-abs.up{ color: var(--gain); }
+  .return-abs.down{ color: var(--loss); }
+
+  .detail-meta{ font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); margin-top: 16px; }
+
+  .range-selector{ display: flex; gap: 6px; margin-top: 28px; flex-wrap: wrap; }
+
+  .range-btn{
+    background: none; border: 1px solid var(--line); color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 6px 12px;
+    border-radius: var(--radius); cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  }
+  .range-btn:hover{ border-color: var(--muted); color: var(--text); }
+  .range-btn.active{ background: var(--text); border-color: var(--text); color: var(--bg); font-weight: 600; }
+  .range-btn:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .history-title{
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--accent); margin: 32px 0 6px;
+  }
+
+  .chart-wrap{
+    margin: 0 0 8px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 20px 16px 12px;
+  }
+  .chart-wrap svg{ display: block; width: 100%; height: auto; }
+  .chart-empty{ padding: 40px 10px; text-align: center; color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
+
+  .footer{
+    margin-top: 22px; display: flex; align-items: center; justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); flex-wrap: wrap; gap: 6px;
+  }
+
+  @media (max-width: 560px){
+    .return-value{ font-size: 17px; }
+    #historyTable thead th:nth-child(6), #historyTable tbody td:nth-child(6),
+    #historyTable thead th:nth-child(7), #historyTable tbody td:nth-child(7) { display: none; }
   }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="station-id">KLO</div>
-  <div class="station-name">Zürich-Kloten — SwissMetNet Wetterstation, 426 m ü. M.</div>
-  <div class="metar" id="metar">wird geladen …</div>
-  <div class="meta-row">
-    <span>QUELLE: MeteoSchweiz (opendata.swiss)</span>
-    <span id="lastUpdate">STAND: —</span>
-  </div>
-</header>
-
-<main>
-  <div id="status">Lade Daten …</div>
-
-  <div class="cards" id="cards" style="display:none;"></div>
-
-  <div class="range-controls" id="rangeControls" style="display:none;">
-    <button data-days="30">30 T</button>
-    <button data-days="90">90 T</button>
-    <button data-days="365" class="active">1 J</button>
-    <button data-days="1095">3 J</button>
-    <button data-days="99999">alles</button>
+<div class="detail" id="detailView">
+  <div class="eyebrow">
+    <div class="brand">
+      <h1>meteodatacollector</h1>
+      <span class="sub">/ KLO</span>
+    </div>
+    <div class="status">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">connecting…</span>
+    </div>
   </div>
 
-  <div id="charts" style="display:none;">
-    <section class="chart-section">
-      <h2>Temperatur — Tagesmittel, Min/Max (°C)</h2>
-      <div class="chart-wrap"><canvas id="chartTemp"></canvas></div>
-    </section>
-    <section class="chart-section">
-      <h2>Niederschlag — Tagessumme (mm)</h2>
-      <div class="chart-wrap"><canvas id="chartPrecip"></canvas></div>
-    </section>
-    <section class="chart-section">
-      <h2>Sonnenstunden pro Tag (h)</h2>
-      <div class="chart-wrap"><canvas id="chartSun"></canvas></div>
-    </section>
-    <section class="chart-section">
-      <h2>Globalstrahlung — Tagesmittel (W/m²)</h2>
-      <div class="chart-wrap"><canvas id="chartRad"></canvas></div>
-    </section>
-    <section class="chart-section">
-      <h2>Wind — Tagesmittel (km/h)</h2>
-      <div class="chart-wrap"><canvas id="chartWind"></canvas></div>
-    </section>
-    <section class="chart-section">
-      <h2>Relative Luftfeuchtigkeit — Tagesmittel (%)</h2>
-      <div class="chart-wrap"><canvas id="chartHum"></canvas></div>
-    </section>
-  </div>
-</main>
+  <div class="detail-header">
+    <h2>Zürich-Kloten</h2>
+    <p class="detail-sub">SwissMetNet Wetterstation KLO · 426 m ü. M.</p>
 
-<footer>
-  Daten: MeteoSchweiz, Station Zürich-Kloten (KLO), via
-  <a href="https://opendatadocs.meteoswiss.ch/" target="_blank" rel="noopener">Open Government Data</a>.
-  Quellenangabe gemäss Nutzungsbedingungen: „Source: MeteoSchweiz“.
-  Aktualisierung täglich per GitHub Actions.
-</footer>
+    <div class="detail-returns" id="detailReturns">
+      <div class="return-box"><span class="return-label">Temp. Mittel</span><span class="return-value" id="valTempMean">—</span><span class="return-abs" id="valTempMeanAbs"></span></div>
+      <div class="return-box"><span class="return-label">Temp. Min</span><span class="return-value" id="valTempMin">—</span><span class="return-abs" id="valTempMinAbs"></span></div>
+      <div class="return-box"><span class="return-label">Temp. Max</span><span class="return-value" id="valTempMax">—</span><span class="return-abs" id="valTempMaxAbs"></span></div>
+      <div class="return-box"><span class="return-label">Niederschlag</span><span class="return-value" id="valPrecip">—</span><span class="return-abs" id="valPrecipAbs"></span></div>
+      <div class="return-box"><span class="return-label">Sonnenstunden</span><span class="return-value" id="valSun">—</span><span class="return-abs" id="valSunAbs"></span></div>
+      <div class="return-box"><span class="return-label">Globalstrahlung</span><span class="return-value" id="valRad">—</span><span class="return-abs" id="valRadAbs"></span></div>
+      <div class="return-box"><span class="return-label">Wind Mittel</span><span class="return-value" id="valWind">—</span><span class="return-abs" id="valWindAbs"></span></div>
+      <div class="return-box"><span class="return-label">Luftfeuchtigkeit</span><span class="return-value" id="valHum">—</span><span class="return-abs" id="valHumAbs"></span></div>
+    </div>
+
+    <div class="detail-meta" id="detailMeta">—</div>
+  </div>
+
+  <div class="range-selector" id="rangeSelector">
+    <button type="button" class="range-btn" data-range="30D">30 Tage</button>
+    <button type="button" class="range-btn" data-range="90D">90 Tage</button>
+    <button type="button" class="range-btn active" data-range="12M">1 Jahr</button>
+    <button type="button" class="range-btn" data-range="3Y">3 Jahre</button>
+    <button type="button" class="range-btn" data-range="ALL">Alle</button>
+  </div>
+
+  <div class="history-title">Temperatur — Tagesmittel, Min/Max (°C)</div>
+  <div class="chart-wrap" id="chartTemp"><div class="chart-empty">Loading chart…</div></div>
+
+  <div class="history-title">Niederschlag — Tagessumme (mm)</div>
+  <div class="chart-wrap" id="chartPrecip"><div class="chart-empty">Loading chart…</div></div>
+
+  <div class="history-title">Sonnenstunden pro Tag (h)</div>
+  <div class="chart-wrap" id="chartSun"><div class="chart-empty">Loading chart…</div></div>
+
+  <div class="history-title">Globalstrahlung — Tagesmittel (W/m²)</div>
+  <div class="chart-wrap" id="chartRad"><div class="chart-empty">Loading chart…</div></div>
+
+  <div class="history-title">Wind — Tagesmittel (km/h)</div>
+  <div class="chart-wrap" id="chartWind"><div class="chart-empty">Loading chart…</div></div>
+
+  <div class="history-title">Relative Luftfeuchtigkeit — Tagesmittel (%)</div>
+  <div class="chart-wrap" id="chartHum"><div class="chart-empty">Loading chart…</div></div>
+
+  <div class="history-title">Letzte Messwerte</div>
+  <table id="historyTable">
+    <thead>
+      <tr>
+        <th>Datum</th>
+        <th class="num">Temp Ø</th>
+        <th class="num">Min/Max</th>
+        <th class="num">Regen</th>
+        <th class="num">Sonne</th>
+        <th class="num">Wind</th>
+        <th class="num">Feuchte</th>
+      </tr>
+    </thead>
+    <tbody id="historyBody">
+      <tr><td colspan="7" class="empty">Loading…</td></tr>
+    </tbody>
+  </table>
+
+  <div class="footer">
+    <span>Daten: MeteoSchweiz, Station Zürich-Kloten (KLO) · Source: MeteoSchweiz</span>
+    <span id="lastSynced">—</span>
+  </div>
+</div>
 
 <script>
-const INK_SOFT = '#5b6674';
-const GRID = '#dde2d5';
+  const DATA_URL = "./data/klo_daily.json";
 
-Chart.defaults.font.family = "'IBM Plex Mono', monospace";
-Chart.defaults.font.size = 11;
-Chart.defaults.color = INK_SOFT;
+  function fmt1(n){ return n == null ? '—' : n.toLocaleString('de-CH', { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
+  function fmt0(n){ return n == null ? '—' : Math.round(n).toLocaleString('de-CH'); }
 
-let fullData = null;
-let charts = {};
-
-function fmtDate(iso){
-  const [y,m,d] = iso.split('-');
-  return `${d}.${m}.${y}`;
-}
-
-function last(arr, n){ return arr.slice(Math.max(0, arr.length - n)); }
-
-function renderCards(days){
-  const latest = days[days.length - 1];
-  if(!latest) return;
-  const cardsEl = document.getElementById('cards');
-  const defs = [
-    {label:'Temp. Mittel', field:'temp_mean_c', unit:'°C'},
-    {label:'Temp. Min / Max', fields:['temp_min_c','temp_max_c'], unit:'°C'},
-    {label:'Niederschlag', field:'precip_mm', unit:'mm'},
-    {label:'Sonnenstunden', field:'sunshine_min', unit:'h', transform:v=>v!=null?(v/60):null},
-    {label:'Globalstrahlung', field:'radiation_wm2', unit:'W/m²'},
-    {label:'Wind Mittel', field:'wind_mean_kmh', unit:'km/h'},
-    {label:'Luftfeuchtigkeit', field:'humidity_pct', unit:'%'},
-  ];
-  cardsEl.innerHTML = '';
-  defs.forEach(def=>{
-    const div = document.createElement('div');
-    div.className = 'card';
-    let valueHtml;
-    if(def.fields){
-      const vals = def.fields.map(f=>latest[f]);
-      valueHtml = vals.map(v=>v!=null?v.toFixed(1):'–').join(' / ') + `<span class="unit">${def.unit}</span>`;
-    } else {
-      let v = latest[def.field];
-      if(def.transform) v = def.transform(v);
-      valueHtml = (v!=null? v.toFixed(1) : '–') + `<span class="unit">${def.unit}</span>`;
-    }
-    div.innerHTML = `<div class="label">${def.label}</div><div class="value">${valueHtml}</div><div class="sub">${fmtDate(latest.date)}</div>`;
-    cardsEl.appendChild(div);
-  });
-  cardsEl.style.display = 'grid';
-}
-
-function renderMetar(days){
-  const latest = days[days.length-1];
-  if(!latest) return;
-  const parts = [
-    `KLO`,
-    fmtDate(latest.date),
-    latest.temp_mean_c!=null?`${latest.temp_mean_c.toFixed(1)}C`:'—',
-    latest.humidity_pct!=null?`${Math.round(latest.humidity_pct)}%RH`:'—',
-    latest.wind_mean_kmh!=null?`${Math.round(latest.wind_mean_kmh)}KMH`:'—',
-    latest.precip_mm!=null?`${latest.precip_mm.toFixed(1)}MM`:'—',
-  ];
-  document.getElementById('metar').textContent = parts.join('  ');
-}
-
-function makeLineChart(ctx, labels, datasets){
-  return new Chart(ctx, {
-    type:'line',
-    data:{ labels, datasets },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      animation:false,
-      interaction:{mode:'index', intersect:false},
-      scales:{
-        x:{ grid:{color:GRID}, ticks:{maxRotation:0, autoSkip:true, maxTicksLimit:8} },
-        y:{ grid:{color:GRID} }
-      },
-      plugins:{
-        legend:{ display: datasets.length > 1, labels:{boxWidth:12} }
-      },
-      elements:{ point:{radius:0}, line:{borderWidth:1.6, tension:0.15} }
-    }
-  });
-}
-
-function buildCharts(days){
-  const labels = days.map(d=>fmtDate(d.date));
-
-  charts.temp = makeLineChart(document.getElementById('chartTemp'), labels, [
-    {label:'Max', data:days.map(d=>d.temp_max_c), borderColor:'#c2703d', borderWidth:1},
-    {label:'Mittel', data:days.map(d=>d.temp_mean_c), borderColor:'#3c6e94', borderWidth:2},
-    {label:'Min', data:days.map(d=>d.temp_min_c), borderColor:'#5b7f5a', borderWidth:1},
-  ]);
-
-  charts.precip = makeLineChart(document.getElementById('chartPrecip'), labels, [
-    {label:'Niederschlag', data:days.map(d=>d.precip_mm), borderColor:'#3c6e94', backgroundColor:'#a9c3d655', fill:true, borderWidth:1},
-  ]);
-
-  charts.sun = makeLineChart(document.getElementById('chartSun'), labels, [
-    {label:'Sonnenstunden', data:days.map(d=>d.sunshine_min!=null? d.sunshine_min/60 : null), borderColor:'#c2703d', borderWidth:1.4},
-  ]);
-
-  charts.rad = makeLineChart(document.getElementById('chartRad'), labels, [
-    {label:'Globalstrahlung', data:days.map(d=>d.radiation_wm2), borderColor:'#8a6fae', borderWidth:1.4},
-  ]);
-
-  charts.wind = makeLineChart(document.getElementById('chartWind'), labels, [
-    {label:'Wind', data:days.map(d=>d.wind_mean_kmh), borderColor:'#5b6674', borderWidth:1.4},
-  ]);
-
-  charts.hum = makeLineChart(document.getElementById('chartHum'), labels, [
-    {label:'Luftfeuchtigkeit', data:days.map(d=>d.humidity_pct), borderColor:'#3c6e94', borderWidth:1.4},
-  ]);
-
-  document.getElementById('charts').style.display = 'block';
-  document.getElementById('rangeControls').style.display = 'flex';
-}
-
-function updateRange(nDays){
-  const days = last(fullData.days, nDays);
-  const labels = days.map(d=>fmtDate(d.date));
-  const setData = (chart, arrs) => {
-    chart.data.labels = labels;
-    chart.data.datasets.forEach((ds, i) => ds.data = arrs[i]);
-    chart.update();
-  };
-  setData(charts.temp, [days.map(d=>d.temp_max_c), days.map(d=>d.temp_mean_c), days.map(d=>d.temp_min_c)]);
-  setData(charts.precip, [days.map(d=>d.precip_mm)]);
-  setData(charts.sun, [days.map(d=>d.sunshine_min!=null? d.sunshine_min/60 : null)]);
-  setData(charts.rad, [days.map(d=>d.radiation_wm2)]);
-  setData(charts.wind, [days.map(d=>d.wind_mean_kmh)]);
-  setData(charts.hum, [days.map(d=>d.humidity_pct)]);
-}
-
-async function init(){
-  try{
-    const resp = await fetch('./data/klo_daily.json', {cache:'no-store'});
-    if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    fullData = await resp.json();
-    if(!fullData.days || fullData.days.length === 0) throw new Error('Keine Tageswerte vorhanden.');
-
-    document.getElementById('status').style.display = 'none';
-    document.getElementById('lastUpdate').textContent = `STAND: ${new Date(fullData.generated_at).toLocaleString('de-CH')}`;
-
-    renderCards(fullData.days);
-    renderMetar(fullData.days);
-    buildCharts(last(fullData.days, 365));
-
-    document.querySelectorAll('#rangeControls button').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        document.querySelectorAll('#rangeControls button').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        updateRange(parseInt(btn.dataset.days, 10));
-      });
-    });
-  } catch(err){
-    document.getElementById('status').textContent =
-      `Konnte data/klo_daily.json nicht laden (${err.message}). Läuft der Collector-Workflow schon? Siehe README.`;
+  function fmtDate(iso){
+    const parts = iso.split('-');
+    return parts[2] + '.' + parts[1] + '.' + parts[0];
   }
-}
 
-init();
+  function parseISO(iso){
+    const parts = iso.split('-').map(Number);
+    return new Date(parts[0], parts[1] - 1, parts[2]);
+  }
+
+  function setCard(idPrefix, current, previous, unit, decimals){
+    const fmt = decimals === 0 ? fmt0 : fmt1;
+    const valEl = document.getElementById('val' + idPrefix);
+    const absEl = document.getElementById('val' + idPrefix + 'Abs');
+    valEl.textContent = current == null ? '—' : (fmt(current) + unit);
+    valEl.className = 'return-value flat';
+
+    if (current != null && previous != null) {
+      const diff = current - previous;
+      const dir = diff > 0.05 ? 'up' : diff < -0.05 ? 'down' : 'flat';
+      absEl.textContent = (diff > 0 ? '+' : '') + fmt(diff) + unit + ' vs. Vortag';
+      absEl.className = 'return-abs ' + dir;
+    } else {
+      absEl.textContent = '';
+    }
+  }
+
+  function filterByRange(days, range){
+    if (range === 'ALL') return days;
+    const now = new Date();
+    let cutoff;
+    if (range === '30D') { cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - 30); }
+    else if (range === '90D') { cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - 90); }
+    else if (range === '12M') { cutoff = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()); }
+    else if (range === '3Y') { cutoff = new Date(now.getFullYear() - 3, now.getMonth(), now.getDate()); }
+    else return days;
+    return days.filter(function(d){ return d._date >= cutoff; });
+  }
+
+  function drawLineChart(container, days, seriesKey, opts) {
+    opts = opts || {};
+    const width = 800, height = 220, pad = { top: 14, right: 14, bottom: 26, left: 46 };
+    const innerW = width - pad.left - pad.right;
+    const innerH = height - pad.top - pad.bottom;
+
+    const points = days
+      .map(function(d){ return { dt: d._date, v: d[seriesKey] }; })
+      .filter(function(p){ return p.v != null; });
+
+    if (points.length < 2) {
+      container.innerHTML = '<div class="chart-empty">Nicht genug Datenpunkte.</div>';
+      return;
+    }
+
+    const bandMinKey = opts.bandMinKey, bandMaxKey = opts.bandMaxKey;
+    let bandPoints = null;
+    if (bandMinKey && bandMaxKey) {
+      bandPoints = days
+        .map(function(d){ return { dt: d._date, lo: d[bandMinKey], hi: d[bandMaxKey] }; })
+        .filter(function(p){ return p.lo != null && p.hi != null; });
+    }
+
+    const allVals = points.map(function(p){ return p.v; }).concat(
+      bandPoints ? bandPoints.reduce(function(acc, p){ return acc.concat([p.lo, p.hi]); }, []) : []
+    );
+    const minY = Math.min.apply(null, allVals);
+    const maxY = Math.max.apply(null, allVals);
+    const yPad = (maxY - minY) * 0.1 || Math.abs(maxY) * 0.05 || 1;
+    const yMin = minY - yPad, yMax = maxY + yPad;
+
+    const minX = points[0].dt.getTime();
+    const maxX = points[points.length - 1].dt.getTime();
+    const xSpan = (maxX - minX) || 1;
+
+    function xScale(t){ return pad.left + ((t - minX) / xSpan) * innerW; }
+    function yScale(v){ return pad.top + innerH - ((v - yMin) / (yMax - yMin)) * innerH; }
+
+    const firstVal = points[0].v, lastVal = points[points.length - 1].v;
+    const lineColor = opts.color || (lastVal >= firstVal ? '#1F8A6E' : '#C0293D');
+
+    let bandPath = '';
+    if (bandPoints && bandPoints.length >= 2) {
+      let hi = 'M', lo = '';
+      bandPoints.forEach(function(p, i){
+        const x = xScale(p.dt.getTime());
+        hi += (i === 0 ? '' : 'L') + x.toFixed(1) + ',' + yScale(p.hi).toFixed(1) + ' ';
+      });
+      for (let i = bandPoints.length - 1; i >= 0; i--) {
+        const p = bandPoints[i];
+        const x = xScale(p.dt.getTime());
+        lo += 'L' + x.toFixed(1) + ',' + yScale(p.lo).toFixed(1) + ' ';
+      }
+      bandPath = hi + lo + 'Z';
+    }
+
+    let d = '';
+    points.forEach(function(p, i){
+      const x = xScale(p.dt.getTime());
+      const y = yScale(p.v);
+      d += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1) + ' ';
+    });
+
+    const areaD = d + 'L' + xScale(maxX).toFixed(1) + ',' + (pad.top + innerH).toFixed(1) +
+                  ' L' + xScale(minX).toFixed(1) + ',' + (pad.top + innerH).toFixed(1) + ' Z';
+
+    let gridLines = '';
+    const steps = 4;
+    for (let i = 0; i <= steps; i++) {
+      const v = yMin + (i / steps) * (yMax - yMin);
+      const y = yScale(v);
+      gridLines += '<line x1="' + pad.left + '" y1="' + y.toFixed(1) + '" x2="' + (width - pad.right) + '" y2="' + y.toFixed(1) + '" stroke="#E3E6EA" stroke-width="1" />';
+      gridLines += '<text x="' + (pad.left - 8) + '" y="' + (y + 3).toFixed(1) + '" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="10" fill="#767E8A">' + fmt1(v) + '</text>';
+    }
+
+    const midPoint = points[Math.floor(points.length / 2)];
+    const xLabels = [points[0], midPoint, points[points.length - 1]].map(function(p){
+      const x = xScale(p.dt.getTime());
+      const dd = String(p.dt.getDate()).padStart(2,'0');
+      const mm = String(p.dt.getMonth()+1).padStart(2,'0');
+      const label = dd + '.' + mm + '.' + p.dt.getFullYear();
+      return '<text x="' + x.toFixed(1) + '" y="' + (height - 8) + '" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="#767E8A">' + label + '</text>';
+    }).join('');
+
+    const bandSvg = bandPath ? '<path d="' + bandPath + '" fill="' + lineColor + '" opacity="0.10" stroke="none" />' : '';
+
+    const svg = '<svg viewBox="0 0 ' + width + ' ' + height + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Zeitreihe">' +
+        gridLines +
+        (!bandPath ? ('<path d="' + areaD + '" fill="' + lineColor + '" opacity="0.08" stroke="none" />') : bandSvg) +
+        '<path d="' + d.trim() + '" fill="none" stroke="' + lineColor + '" stroke-width="2" />' +
+        xLabels +
+      '</svg>';
+    container.innerHTML = svg;
+  }
+
+  async function init() {
+    const dot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const lastSynced = document.getElementById('lastSynced');
+
+    try {
+      const resp = await fetch(DATA_URL, { cache: 'no-store' });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+      if (!data.days || data.days.length === 0) throw new Error('Keine Tageswerte vorhanden.');
+
+      const days = data.days.map(function(d){ return Object.assign({}, d, { _date: parseISO(d.date) }); });
+      const latest = days[days.length - 1];
+      const prev = days.length >= 2 ? days[days.length - 2] : null;
+
+      dot.classList.remove('stale');
+      statusText.textContent = 'live';
+      lastSynced.textContent = 'synced ' + new Date().toLocaleTimeString('de-CH');
+
+      setCard('TempMean', latest.temp_mean_c, prev ? prev.temp_mean_c : null, '°C', 1);
+      setCard('TempMin', latest.temp_min_c, prev ? prev.temp_min_c : null, '°C', 1);
+      setCard('TempMax', latest.temp_max_c, prev ? prev.temp_max_c : null, '°C', 1);
+      setCard('Precip', latest.precip_mm, prev ? prev.precip_mm : null, ' mm', 1);
+      setCard('Sun', latest.sunshine_min != null ? latest.sunshine_min / 60 : null,
+                     prev && prev.sunshine_min != null ? prev.sunshine_min / 60 : null, ' h', 1);
+      setCard('Rad', latest.radiation_wm2, prev ? prev.radiation_wm2 : null, ' W/m²', 0);
+      setCard('Wind', latest.wind_mean_kmh, prev ? prev.wind_mean_kmh : null, ' km/h', 1);
+      setCard('Hum', latest.humidity_pct, prev ? prev.humidity_pct : null, ' %', 0);
+
+      document.getElementById('detailMeta').textContent =
+        'Stand ' + fmtDate(latest.date) + ' · Quelle: MeteoSchweiz · ' + days.length + ' Tage im Archiv';
+
+      let currentRange = '12M';
+      const chartContainers = {
+        Temp: document.getElementById('chartTemp'),
+        Precip: document.getElementById('chartPrecip'),
+        Sun: document.getElementById('chartSun'),
+        Rad: document.getElementById('chartRad'),
+        Wind: document.getElementById('chartWind'),
+        Hum: document.getElementById('chartHum')
+      };
+
+      function renderCharts(){
+        const filtered = filterByRange(days, currentRange);
+        drawLineChart(chartContainers.Temp, filtered, 'temp_mean_c', { bandMinKey: 'temp_min_c', bandMaxKey: 'temp_max_c', color: '#E30613' });
+        drawLineChart(chartContainers.Precip, filtered, 'precip_mm', { color: '#1F8A6E' });
+        const withSunHours = filtered.map(function(d){ return Object.assign({}, d, { sunshine_h: d.sunshine_min != null ? d.sunshine_min / 60 : null }); });
+        drawLineChart(chartContainers.Sun, withSunHours, 'sunshine_h', { color: '#C08A00' });
+        drawLineChart(chartContainers.Rad, filtered, 'radiation_wm2', { color: '#8A5CC0' });
+        drawLineChart(chartContainers.Wind, filtered, 'wind_mean_kmh', { color: '#767E8A' });
+        drawLineChart(chartContainers.Hum, filtered, 'humidity_pct', { color: '#1F6FA8' });
+      }
+
+      document.querySelectorAll('#rangeSelector .range-btn').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          currentRange = btn.dataset.range;
+          document.querySelectorAll('#rangeSelector .range-btn').forEach(function(b){ b.classList.toggle('active', b === btn); });
+          renderCharts();
+        });
+      });
+
+      renderCharts();
+
+      const sortedDesc = days.slice().sort(function(a, b){ return b._date - a._date; }).slice(0, 30);
+      document.getElementById('historyBody').innerHTML = sortedDesc.map(function(d){
+        return '<tr>' +
+          '<td class="time">' + fmtDate(d.date) + '</td>' +
+          '<td class="price">' + fmt1(d.temp_mean_c) + '°C</td>' +
+          '<td class="price">' + fmt1(d.temp_min_c) + ' / ' + fmt1(d.temp_max_c) + '</td>' +
+          '<td class="price">' + fmt1(d.precip_mm) + ' mm</td>' +
+          '<td class="price">' + (d.sunshine_min != null ? fmt1(d.sunshine_min / 60) : '—') + ' h</td>' +
+          '<td class="price">' + fmt1(d.wind_mean_kmh) + ' km/h</td>' +
+          '<td class="price">' + fmt0(d.humidity_pct) + ' %</td>' +
+        '</tr>';
+      }).join('');
+
+    } catch (err) {
+      dot.classList.add('stale');
+      statusText.textContent = 'connection failed';
+      document.getElementById('detailMeta').textContent = 'Fehler beim Laden: ' + err.message;
+      ['chartTemp','chartPrecip','chartSun','chartRad','chartWind','chartHum'].forEach(function(id){
+        document.getElementById(id).innerHTML = '<div class="chart-empty">Konnte Daten nicht laden: ' + err.message + '</div>';
+      });
+      document.getElementById('historyBody').innerHTML = '<tr><td colspan="7" class="error">Konnte Daten nicht laden: ' + err.message + '</td></tr>';
+    }
+  }
+
+  init();
 </script>
 
 </body>
