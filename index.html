@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KLO — Zürich-Kloten Wetterstation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root{
+    --paper:#eef1ea;
+    --panel:#f8f9f4;
+    --ink:#1f2a37;
+    --ink-soft:#5b6674;
+    --rule:#c9d0c2;
+    --blue:#3c6e94;
+    --blue-soft:#a9c3d6;
+    --amber:#c2703d;
+    --green:#5b7f5a;
+    --grid:#dde2d5;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:28px 28px;
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+  }
+  a{color:var(--blue);}
+
+  header{
+    padding:2.5rem 1.5rem 1.5rem;
+    max-width:1100px;
+    margin:0 auto;
+  }
+  .station-id{
+    font-family:'IBM Plex Sans Condensed', sans-serif;
+    font-weight:700;
+    font-size:clamp(3rem, 9vw, 6rem);
+    letter-spacing:0.02em;
+    line-height:0.9;
+    color:var(--ink);
+  }
+  .station-name{
+    font-size:1.1rem;
+    color:var(--ink-soft);
+    margin-top:0.4rem;
+  }
+  .metar{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.85rem;
+    color:var(--blue);
+    background:var(--panel);
+    border:1px solid var(--rule);
+    border-left:4px solid var(--amber);
+    padding:0.6rem 0.9rem;
+    margin-top:1.2rem;
+    display:inline-block;
+    white-space:pre-wrap;
+  }
+  .meta-row{
+    display:flex;
+    gap:1.5rem;
+    flex-wrap:wrap;
+    margin-top:1rem;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.8rem;
+    color:var(--ink-soft);
+  }
+
+  main{max-width:1100px; margin:0 auto; padding:0 1.5rem 4rem;}
+
+  .cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
+    gap:1px;
+    background:var(--rule);
+    border:1px solid var(--rule);
+    margin:1.5rem 0 2.5rem;
+  }
+  .card{
+    background:var(--panel);
+    padding:1rem 1.1rem 1.2rem;
+  }
+  .card .label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.7rem;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--ink-soft);
+  }
+  .card .value{
+    font-family:'IBM Plex Sans Condensed', sans-serif;
+    font-weight:700;
+    font-size:2rem;
+    margin-top:0.3rem;
+  }
+  .card .unit{
+    font-size:0.95rem;
+    font-weight:500;
+    color:var(--ink-soft);
+    margin-left:0.15rem;
+  }
+  .card .sub{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.75rem;
+    color:var(--ink-soft);
+    margin-top:0.35rem;
+  }
+
+  section.chart-section{
+    margin-bottom:2.5rem;
+    background:var(--panel);
+    border:1px solid var(--rule);
+    padding:1.2rem 1.2rem 0.8rem;
+  }
+  section.chart-section h2{
+    font-family:'IBM Plex Sans Condensed', sans-serif;
+    font-size:1rem;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--ink-soft);
+    margin:0 0 0.8rem;
+    font-weight:600;
+  }
+  .chart-wrap{position:relative; height:260px;}
+
+  .range-controls{
+    display:flex;
+    gap:0.4rem;
+    margin:0 0 1.5rem;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.8rem;
+  }
+  .range-controls button{
+    background:var(--panel);
+    border:1px solid var(--rule);
+    color:var(--ink);
+    padding:0.35rem 0.8rem;
+    cursor:pointer;
+  }
+  .range-controls button.active{
+    background:var(--blue);
+    border-color:var(--blue);
+    color:#fff;
+  }
+
+  footer{
+    max-width:1100px;
+    margin:0 auto;
+    padding:1.5rem;
+    font-size:0.8rem;
+    color:var(--ink-soft);
+    border-top:1px solid var(--rule);
+  }
+
+  #status{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.85rem;
+    color:var(--ink-soft);
+    padding:2rem 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="station-id">KLO</div>
+  <div class="station-name">Zürich-Kloten — SwissMetNet Wetterstation, 426 m ü. M.</div>
+  <div class="metar" id="metar">wird geladen …</div>
+  <div class="meta-row">
+    <span>QUELLE: MeteoSchweiz (opendata.swiss)</span>
+    <span id="lastUpdate">STAND: —</span>
+  </div>
+</header>
+
+<main>
+  <div id="status">Lade Daten …</div>
+
+  <div class="cards" id="cards" style="display:none;"></div>
+
+  <div class="range-controls" id="rangeControls" style="display:none;">
+    <button data-days="30">30 T</button>
+    <button data-days="90">90 T</button>
+    <button data-days="365" class="active">1 J</button>
+    <button data-days="1095">3 J</button>
+    <button data-days="99999">alles</button>
+  </div>
+
+  <div id="charts" style="display:none;">
+    <section class="chart-section">
+      <h2>Temperatur — Tagesmittel, Min/Max (°C)</h2>
+      <div class="chart-wrap"><canvas id="chartTemp"></canvas></div>
+    </section>
+    <section class="chart-section">
+      <h2>Niederschlag — Tagessumme (mm)</h2>
+      <div class="chart-wrap"><canvas id="chartPrecip"></canvas></div>
+    </section>
+    <section class="chart-section">
+      <h2>Sonnenstunden pro Tag (h)</h2>
+      <div class="chart-wrap"><canvas id="chartSun"></canvas></div>
+    </section>
+    <section class="chart-section">
+      <h2>Globalstrahlung — Tagesmittel (W/m²)</h2>
+      <div class="chart-wrap"><canvas id="chartRad"></canvas></div>
+    </section>
+    <section class="chart-section">
+      <h2>Wind — Tagesmittel (km/h)</h2>
+      <div class="chart-wrap"><canvas id="chartWind"></canvas></div>
+    </section>
+    <section class="chart-section">
+      <h2>Relative Luftfeuchtigkeit — Tagesmittel (%)</h2>
+      <div class="chart-wrap"><canvas id="chartHum"></canvas></div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  Daten: MeteoSchweiz, Station Zürich-Kloten (KLO), via
+  <a href="https://opendatadocs.meteoswiss.ch/" target="_blank" rel="noopener">Open Government Data</a>.
+  Quellenangabe gemäss Nutzungsbedingungen: „Source: MeteoSchweiz“.
+  Aktualisierung täglich per GitHub Actions.
+</footer>
+
+<script>
+const INK_SOFT = '#5b6674';
+const GRID = '#dde2d5';
+
+Chart.defaults.font.family = "'IBM Plex Mono', monospace";
+Chart.defaults.font.size = 11;
+Chart.defaults.color = INK_SOFT;
+
+let fullData = null;
+let charts = {};
+
+function fmtDate(iso){
+  const [y,m,d] = iso.split('-');
+  return `${d}.${m}.${y}`;
+}
+
+function last(arr, n){ return arr.slice(Math.max(0, arr.length - n)); }
+
+function renderCards(days){
+  const latest = days[days.length - 1];
+  if(!latest) return;
+  const cardsEl = document.getElementById('cards');
+  const defs = [
+    {label:'Temp. Mittel', field:'temp_mean_c', unit:'°C'},
+    {label:'Temp. Min / Max', fields:['temp_min_c','temp_max_c'], unit:'°C'},
+    {label:'Niederschlag', field:'precip_mm', unit:'mm'},
+    {label:'Sonnenstunden', field:'sunshine_min', unit:'h', transform:v=>v!=null?(v/60):null},
+    {label:'Globalstrahlung', field:'radiation_wm2', unit:'W/m²'},
+    {label:'Wind Mittel', field:'wind_mean_kmh', unit:'km/h'},
+    {label:'Luftfeuchtigkeit', field:'humidity_pct', unit:'%'},
+  ];
+  cardsEl.innerHTML = '';
+  defs.forEach(def=>{
+    const div = document.createElement('div');
+    div.className = 'card';
+    let valueHtml;
+    if(def.fields){
+      const vals = def.fields.map(f=>latest[f]);
+      valueHtml = vals.map(v=>v!=null?v.toFixed(1):'–').join(' / ') + `<span class="unit">${def.unit}</span>`;
+    } else {
+      let v = latest[def.field];
+      if(def.transform) v = def.transform(v);
+      valueHtml = (v!=null? v.toFixed(1) : '–') + `<span class="unit">${def.unit}</span>`;
+    }
+    div.innerHTML = `<div class="label">${def.label}</div><div class="value">${valueHtml}</div><div class="sub">${fmtDate(latest.date)}</div>`;
+    cardsEl.appendChild(div);
+  });
+  cardsEl.style.display = 'grid';
+}
+
+function renderMetar(days){
+  const latest = days[days.length-1];
+  if(!latest) return;
+  const parts = [
+    `KLO`,
+    fmtDate(latest.date),
+    latest.temp_mean_c!=null?`${latest.temp_mean_c.toFixed(1)}C`:'—',
+    latest.humidity_pct!=null?`${Math.round(latest.humidity_pct)}%RH`:'—',
+    latest.wind_mean_kmh!=null?`${Math.round(latest.wind_mean_kmh)}KMH`:'—',
+    latest.precip_mm!=null?`${latest.precip_mm.toFixed(1)}MM`:'—',
+  ];
+  document.getElementById('metar').textContent = parts.join('  ');
+}
+
+function makeLineChart(ctx, labels, datasets){
+  return new Chart(ctx, {
+    type:'line',
+    data:{ labels, datasets },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      animation:false,
+      interaction:{mode:'index', intersect:false},
+      scales:{
+        x:{ grid:{color:GRID}, ticks:{maxRotation:0, autoSkip:true, maxTicksLimit:8} },
+        y:{ grid:{color:GRID} }
+      },
+      plugins:{
+        legend:{ display: datasets.length > 1, labels:{boxWidth:12} }
+      },
+      elements:{ point:{radius:0}, line:{borderWidth:1.6, tension:0.15} }
+    }
+  });
+}
+
+function buildCharts(days){
+  const labels = days.map(d=>fmtDate(d.date));
+
+  charts.temp = makeLineChart(document.getElementById('chartTemp'), labels, [
+    {label:'Max', data:days.map(d=>d.temp_max_c), borderColor:'#c2703d', borderWidth:1},
+    {label:'Mittel', data:days.map(d=>d.temp_mean_c), borderColor:'#3c6e94', borderWidth:2},
+    {label:'Min', data:days.map(d=>d.temp_min_c), borderColor:'#5b7f5a', borderWidth:1},
+  ]);
+
+  charts.precip = makeLineChart(document.getElementById('chartPrecip'), labels, [
+    {label:'Niederschlag', data:days.map(d=>d.precip_mm), borderColor:'#3c6e94', backgroundColor:'#a9c3d655', fill:true, borderWidth:1},
+  ]);
+
+  charts.sun = makeLineChart(document.getElementById('chartSun'), labels, [
+    {label:'Sonnenstunden', data:days.map(d=>d.sunshine_min!=null? d.sunshine_min/60 : null), borderColor:'#c2703d', borderWidth:1.4},
+  ]);
+
+  charts.rad = makeLineChart(document.getElementById('chartRad'), labels, [
+    {label:'Globalstrahlung', data:days.map(d=>d.radiation_wm2), borderColor:'#8a6fae', borderWidth:1.4},
+  ]);
+
+  charts.wind = makeLineChart(document.getElementById('chartWind'), labels, [
+    {label:'Wind', data:days.map(d=>d.wind_mean_kmh), borderColor:'#5b6674', borderWidth:1.4},
+  ]);
+
+  charts.hum = makeLineChart(document.getElementById('chartHum'), labels, [
+    {label:'Luftfeuchtigkeit', data:days.map(d=>d.humidity_pct), borderColor:'#3c6e94', borderWidth:1.4},
+  ]);
+
+  document.getElementById('charts').style.display = 'block';
+  document.getElementById('rangeControls').style.display = 'flex';
+}
+
+function updateRange(nDays){
+  const days = last(fullData.days, nDays);
+  const labels = days.map(d=>fmtDate(d.date));
+  const setData = (chart, arrs) => {
+    chart.data.labels = labels;
+    chart.data.datasets.forEach((ds, i) => ds.data = arrs[i]);
+    chart.update();
+  };
+  setData(charts.temp, [days.map(d=>d.temp_max_c), days.map(d=>d.temp_mean_c), days.map(d=>d.temp_min_c)]);
+  setData(charts.precip, [days.map(d=>d.precip_mm)]);
+  setData(charts.sun, [days.map(d=>d.sunshine_min!=null? d.sunshine_min/60 : null)]);
+  setData(charts.rad, [days.map(d=>d.radiation_wm2)]);
+  setData(charts.wind, [days.map(d=>d.wind_mean_kmh)]);
+  setData(charts.hum, [days.map(d=>d.humidity_pct)]);
+}
+
+async function init(){
+  try{
+    const resp = await fetch('./data/klo_daily.json', {cache:'no-store'});
+    if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    fullData = await resp.json();
+    if(!fullData.days || fullData.days.length === 0) throw new Error('Keine Tageswerte vorhanden.');
+
+    document.getElementById('status').style.display = 'none';
+    document.getElementById('lastUpdate').textContent = `STAND: ${new Date(fullData.generated_at).toLocaleString('de-CH')}`;
+
+    renderCards(fullData.days);
+    renderMetar(fullData.days);
+    buildCharts(last(fullData.days, 365));
+
+    document.querySelectorAll('#rangeControls button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('#rangeControls button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        updateRange(parseInt(btn.dataset.days, 10));
+      });
+    });
+  } catch(err){
+    document.getElementById('status').textContent =
+      `Konnte data/klo_daily.json nicht laden (${err.message}). Läuft der Collector-Workflow schon? Siehe README.`;
+  }
+}
+
+init();
+</script>
+
+</body>
+</html>
