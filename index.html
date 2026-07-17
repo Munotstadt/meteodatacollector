@@ -210,6 +210,8 @@
       <div class="return-box"><span class="return-label">Sonnenstunden</span><span class="return-value" id="valSun">—</span><span class="return-abs" id="valSunAbs"></span></div>
       <div class="return-box"><span class="return-label">Globalstrahlung</span><span class="return-value" id="valRad">—</span><span class="return-abs" id="valRadAbs"></span></div>
       <div class="return-box"><span class="return-label">Wind Mittel</span><span class="return-value" id="valWind">—</span><span class="return-abs" id="valWindAbs"></span></div>
+      <div class="return-box"><span class="return-label">Wind Min</span><span class="return-value" id="valWindMin">—</span><span class="return-abs" id="valWindMinAbs"></span></div>
+      <div class="return-box"><span class="return-label">Wind Max</span><span class="return-value" id="valWindMax">—</span><span class="return-abs" id="valWindMaxAbs"></span></div>
       <div class="return-box"><span class="return-label">Luftfeuchtigkeit</span><span class="return-value" id="valHum">—</span><span class="return-abs" id="valHumAbs"></span></div>
     </div>
 
@@ -218,8 +220,8 @@
 
   <div class="range-selector" id="rangeSelector">
     <button type="button" class="range-btn" data-range="30D">30 Tage</button>
-    <button type="button" class="range-btn" data-range="90D">90 Tage</button>
-    <button type="button" class="range-btn active" data-range="12M">1 Jahr</button>
+    <button type="button" class="range-btn active" data-range="90D">90 Tage</button>
+    <button type="button" class="range-btn" data-range="12M">1 Jahr</button>
     <button type="button" class="range-btn" data-range="3Y">3 Jahre</button>
     <button type="button" class="range-btn" data-range="ALL">Alle</button>
   </div>
@@ -236,7 +238,7 @@
   <div class="history-title">Globalstrahlung — Tagesmittel (W/m²)</div>
   <div class="chart-wrap" id="chartRad"><div class="chart-empty">Loading chart…</div></div>
 
-  <div class="history-title">Wind — Tagesmittel (km/h)</div>
+  <div class="history-title">Wind — Tagesmittel, Min/Max (km/h)</div>
   <div class="chart-wrap" id="chartWind"><div class="chart-empty">Loading chart…</div></div>
 
   <div class="history-title">Relative Luftfeuchtigkeit — Tagesmittel (%)</div>
@@ -406,6 +408,73 @@
     container.innerHTML = svg;
   }
 
+  function drawBarChart(container, days, seriesKey, opts) {
+    opts = opts || {};
+    const width = 800, height = 220, pad = { top: 14, right: 14, bottom: 26, left: 46 };
+    const innerW = width - pad.left - pad.right;
+    const innerH = height - pad.top - pad.bottom;
+
+    const points = days
+      .map(function(d){ return { dt: d._date, v: d[seriesKey] }; })
+      .filter(function(p){ return p.v != null; });
+
+    if (points.length < 2) {
+      container.innerHTML = '<div class="chart-empty">Nicht genug Datenpunkte.</div>';
+      return;
+    }
+
+    const vals = points.map(function(p){ return p.v; });
+    const minY = Math.min(0, Math.min.apply(null, vals));
+    const maxY = Math.max.apply(null, vals);
+    const yPad = (maxY - minY) * 0.1 || Math.abs(maxY) * 0.05 || 1;
+    const yMin = minY, yMax = maxY + yPad;
+
+    const minX = points[0].dt.getTime();
+    const maxX = points[points.length - 1].dt.getTime();
+    const xSpan = (maxX - minX) || 1;
+
+    function xScale(t){ return pad.left + ((t - minX) / xSpan) * innerW; }
+    function yScale(v){ return pad.top + innerH - ((v - yMin) / (yMax - yMin || 1)) * innerH; }
+
+    const barColor = opts.color || '#1F6FA8';
+    // Bar width derived from the average spacing between points, capped so
+    // dense ranges (e.g. "Alle") still render as visible slivers.
+    const avgSpacing = xSpan / (points.length - 1);
+    const barW = Math.max(1, Math.min(14, (avgSpacing / xSpan) * innerW * 0.7));
+
+    const baseline = yScale(0);
+    const bars = points.map(function(p){
+      const x = xScale(p.dt.getTime());
+      const y = yScale(p.v);
+      const barTop = Math.min(y, baseline);
+      const barH = Math.max(1, Math.abs(baseline - y));
+      return '<rect x="' + (x - barW / 2).toFixed(1) + '" y="' + barTop.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + barH.toFixed(1) + '" fill="' + barColor + '" opacity="0.75" />';
+    }).join('');
+
+    let gridLines = '';
+    const steps = 4;
+    for (let i = 0; i <= steps; i++) {
+      const v = yMin + (i / steps) * (yMax - yMin);
+      const y = yScale(v);
+      gridLines += '<line x1="' + pad.left + '" y1="' + y.toFixed(1) + '" x2="' + (width - pad.right) + '" y2="' + y.toFixed(1) + '" stroke="#E3E6EA" stroke-width="1" />';
+      gridLines += '<text x="' + (pad.left - 8) + '" y="' + (y + 3).toFixed(1) + '" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="10" fill="#767E8A">' + fmt1(v) + '</text>';
+    }
+
+    const midPoint = points[Math.floor(points.length / 2)];
+    const xLabels = [points[0], midPoint, points[points.length - 1]].map(function(p){
+      const x = xScale(p.dt.getTime());
+      const dd = String(p.dt.getDate()).padStart(2,'0');
+      const mm = String(p.dt.getMonth()+1).padStart(2,'0');
+      const label = dd + '.' + mm + '.' + p.dt.getFullYear();
+      return '<text x="' + x.toFixed(1) + '" y="' + (height - 8) + '" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="#767E8A">' + label + '</text>';
+    }).join('');
+
+    const svg = '<svg viewBox="0 0 ' + width + ' ' + height + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Zeitreihe">' +
+        gridLines + bars + xLabels +
+      '</svg>';
+    container.innerHTML = svg;
+  }
+
   async function init() {
     const dot = document.getElementById('statusDot');
     const statusText = document.getElementById('statusText');
@@ -433,12 +502,14 @@
                      prev && prev.sunshine_min != null ? prev.sunshine_min / 60 : null, ' h', 1);
       setCard('Rad', latest.radiation_wm2, prev ? prev.radiation_wm2 : null, ' W/m²', 0);
       setCard('Wind', latest.wind_mean_kmh, prev ? prev.wind_mean_kmh : null, ' km/h', 1);
+      setCard('WindMin', latest.wind_min_kmh, prev ? prev.wind_min_kmh : null, ' km/h', 1);
+      setCard('WindMax', latest.wind_max_kmh, prev ? prev.wind_max_kmh : null, ' km/h', 1);
       setCard('Hum', latest.humidity_pct, prev ? prev.humidity_pct : null, ' %', 0);
 
       document.getElementById('detailMeta').textContent =
         'Stand ' + fmtDate(latest.date) + ' · Quelle: MeteoSchweiz · ' + days.length + ' Tage im Archiv';
 
-      let currentRange = '12M';
+      let currentRange = '90D';
       const chartContainers = {
         Temp: document.getElementById('chartTemp'),
         Precip: document.getElementById('chartPrecip'),
@@ -451,11 +522,11 @@
       function renderCharts(){
         const filtered = filterByRange(days, currentRange);
         drawLineChart(chartContainers.Temp, filtered, 'temp_mean_c', { bandMinKey: 'temp_min_c', bandMaxKey: 'temp_max_c', color: '#E30613' });
-        drawLineChart(chartContainers.Precip, filtered, 'precip_mm', { color: '#1F8A6E' });
+        drawBarChart(chartContainers.Precip, filtered, 'precip_mm', { color: '#1F8A6E' });
         const withSunHours = filtered.map(function(d){ return Object.assign({}, d, { sunshine_h: d.sunshine_min != null ? d.sunshine_min / 60 : null }); });
-        drawLineChart(chartContainers.Sun, withSunHours, 'sunshine_h', { color: '#C08A00' });
-        drawLineChart(chartContainers.Rad, filtered, 'radiation_wm2', { color: '#8A5CC0' });
-        drawLineChart(chartContainers.Wind, filtered, 'wind_mean_kmh', { color: '#767E8A' });
+        drawBarChart(chartContainers.Sun, withSunHours, 'sunshine_h', { color: '#C08A00' });
+        drawBarChart(chartContainers.Rad, filtered, 'radiation_wm2', { color: '#8A5CC0' });
+        drawLineChart(chartContainers.Wind, filtered, 'wind_mean_kmh', { bandMinKey: 'wind_min_kmh', bandMaxKey: 'wind_max_kmh', color: '#767E8A' });
         drawLineChart(chartContainers.Hum, filtered, 'humidity_pct', { color: '#1F6FA8' });
       }
 
