@@ -1,0 +1,37 @@
+name: Collect MeteoSwiss data (KLO)
+
+on:
+  schedule:
+    # 05:15 UTC = 06:15/07:15 CET/CEST - Tageswert vom Vortag ist dann final.
+    - cron: "15 5 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run collector
+        run: python collector/collect.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "meteodatacollector-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/klo_daily.csv data/klo_daily.json
+          if git diff --cached --quiet; then
+            echo "Keine Aenderungen."
+          else
+            git commit -m "Update KLO Daten $(date -u +%Y-%m-%d)"
+            git push
+          fi
