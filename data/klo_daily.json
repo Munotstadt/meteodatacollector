@@ -2,7 +2,7 @@
   "station": "KLO",
   "station_name": "Zürich-Kloten",
   "source": "MeteoSchweiz (opendata.swiss) - Source: MeteoSchweiz",
-  "generated_at": "2026-07-22T10:01:58+00:00",
+  "generated_at": "2026-07-23T06:16:34+00:00",
   "fields": [
     "temp_mean_c",
     "temp_min_c",
@@ -16,19 +16,6 @@
     "humidity_pct"
   ],
   "days": [
-    {
-      "date": "2023-07-23",
-      "temp_mean_c": 21.2,
-      "temp_min_c": 12.0,
-      "temp_max_c": 30.1,
-      "precip_mm": 9.1,
-      "sunshine_min": 533.0,
-      "radiation_wm2": 295.0,
-      "wind_mean_kmh": 9.0,
-      "wind_min_kmh": null,
-      "wind_max_kmh": null,
-      "humidity_pct": 61.2
-    },
     {
       "date": "2023-07-24",
       "temp_mean_c": 19.1,
@@ -14243,13 +14230,26 @@
       "temp_mean_c": 18.4,
       "temp_min_c": 10.7,
       "temp_max_c": 24.5,
-      "precip_mm": null,
+      "precip_mm": 0.0,
       "sunshine_min": 633.0,
       "radiation_wm2": 300.0,
       "wind_mean_kmh": 11.9,
       "wind_min_kmh": null,
       "wind_max_kmh": null,
       "humidity_pct": 48.0
+    },
+    {
+      "date": "2026-07-22",
+      "temp_mean_c": 19.4,
+      "temp_min_c": 8.6,
+      "temp_max_c": 27.1,
+      "precip_mm": null,
+      "sunshine_min": 796.0,
+      "radiation_wm2": 332.0,
+      "wind_mean_kmh": 6.5,
+      "wind_min_kmh": null,
+      "wind_max_kmh": null,
+      "humidity_pct": 48.4
     }
   ]
 }
