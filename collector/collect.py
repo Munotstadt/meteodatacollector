@@ -1,24 +1,30 @@
 #!/usr/bin/env python3
 """
 MeteoDataCollector - Sammelt Tageswerte der MeteoSchweiz-Station
-Zürich-Kloten (KLO) und schreibt sie nach data/klo_daily.csv (Archiv)
-und data/klo_daily.json (fuer die Webseite, letzte N Tage).
+Zürich-Kloten (KLO) und schreibt sie direkt in eine Azure SQL Database
+(Tabelle dbo.klo_daily, ein UPSERT pro Tag).
 
 Quelle: MeteoSchweiz Open Government Data (OGD-SMN)
 https://opendatadocs.meteoswiss.ch/a-data-groundbased/a1-automatic-weather-stations
 Nutzungsbedingungen: Quellenangabe "Source: MeteoSchweiz" erforderlich.
+
+Benoetigte Umgebungsvariablen (als GitHub Secrets gesetzt):
+  AZURE_SQL_SERVER    z.B. sql-munotstadt-meteo.database.windows.net
+  AZURE_SQL_DATABASE  z.B. MeteoDB
+  AZURE_SQL_USER      SQL-Login (Admin-User aus der Server-Einrichtung)
+  AZURE_SQL_PASSWORD  Passwort dazu
 """
 
 from __future__ import annotations
 
 import csv
 import io
-import json
+import os
 import sys
-from datetime import datetime, timezone
-from pathlib import Path
+from datetime import datetime
 
 import urllib.request
+import pymssql
 
 STATION = "klo"  # Zuerich-Kloten
 BASE_URL = f"https://data.geo.admin.ch/ch.meteoschweiz.ogd-smn/{STATION}"
@@ -26,31 +32,21 @@ RECENT_URL = f"{BASE_URL}/ogd-smn_{STATION}_d_recent.csv"
 HISTORICAL_URL = f"{BASE_URL}/ogd-smn_{STATION}_d_historical.csv"
 
 # Parameter-Codes fuer Tageswerte (Quelle: ogd-smn_meta_parameters.csv).
-# Falls MeteoSchweiz einen Code umbenennt, meldet der Check unten den Fehler
-# mit einer Liste der tatsaechlich vorhandenen Spalten.
 PARAMS = {
-    "tre200d0": "temp_mean_c",       # Lufttemperatur 2m, Tagesmittel
-    "tre200dn": "temp_min_c",        # Lufttemperatur 2m, Tagesminimum
-    "tre200dx": "temp_max_c",        # Lufttemperatur 2m, Tagesmaximum
-    "rre150d0": "precip_mm",         # Niederschlag, Tagessumme (05:40-05:40 Folgetag)
-    "sre000d0": "sunshine_min",      # Sonnenscheindauer, Tagessumme (Minuten)
-    "gre000d0": "radiation_wm2",     # Globalstrahlung, Tagesmittel (W/m^2)
-    "fu3010d0": "wind_mean_kmh",     # Windgeschwindigkeit skalar, Tagesmittel (km/h)
-    "fu3010dn": "wind_min_kmh",      # Windgeschwindigkeit skalar, Tagesminimum (km/h)
-    "fu3010dx": "wind_max_kmh",      # Windgeschwindigkeit skalar, Tagesmaximum (km/h)
-    "ure200d0": "humidity_pct",      # Relative Luftfeuchtigkeit, Tagesmittel
+    "tre200d0": "temp_mean_c",
+    "tre200dn": "temp_min_c",
+    "tre200dx": "temp_max_c",
+    "rre150d0": "precip_mm",
+    "sre000d0": "sunshine_min",
+    "gre000d0": "radiation_wm2",
+    "fu3010d0": "wind_mean_kmh",
+    "fu3010dn": "wind_min_kmh",
+    "fu3010dx": "wind_max_kmh",
+    "ure200d0": "humidity_pct",
 }
+COLUMNS = list(PARAMS.values())  # DB column order (excluding obs_date)
 
 TIMESTAMP_COL_CANDIDATES = ("reference_timestamp", "REFERENCE_TS")
-STATION_COL_CANDIDATES = ("station_abbr", "STATION")
-
-REPO_ROOT = Path(__file__).resolve().parent.parent
-DATA_DIR = REPO_ROOT / "data"
-CSV_PATH = DATA_DIR / "klo_daily.csv"
-JSON_PATH = DATA_DIR / "klo_daily.json"
-
-# Wie viele Tage sollen im JSON fuer die Webseite enthalten sein.
-JSON_WINDOW_DAYS = 3 * 365
 
 
 def fetch_csv(url: str) -> list[dict]:
@@ -77,7 +73,6 @@ def parse_date(row: dict) -> str | None:
     for col in TIMESTAMP_COL_CANDIDATES:
         if col in row and row[col]:
             raw = row[col]
-            # Formate: "01.01.2024 00:00" (historical) oder "2024-01-01T00:00" (recent)
             for fmt in ("%d.%m.%Y %H:%M", "%Y-%m-%dT%H:%M", "%Y-%m-%dT%H:%M:%S"):
                 try:
                     return datetime.strptime(raw, fmt).strftime("%Y-%m-%d")
@@ -110,51 +105,47 @@ def normalize_rows(raw_rows: list[dict]) -> dict[str, dict]:
     return out
 
 
-def load_existing_csv() -> dict[str, dict]:
-    if not CSV_PATH.exists():
-        return {}
-    with CSV_PATH.open(newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        rows = {}
-        for row in reader:
-            date = row["date"]
-            rows[date] = {
-                "date": date,
-                **{
-                    field: (float(row[field]) if row.get(field) not in (None, "") else None)
-                    for field in PARAMS.values()
-                },
-            }
-    return rows
+def get_connection() -> pymssql.Connection:
+    server = os.environ["AZURE_SQL_SERVER"]
+    database = os.environ["AZURE_SQL_DATABASE"]
+    user = os.environ["AZURE_SQL_USER"]
+    password = os.environ["AZURE_SQL_PASSWORD"]
+    return pymssql.connect(server=server, database=database, user=user, password=password, timeout=60)
 
 
-def write_csv(all_rows: dict[str, dict]) -> None:
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    fieldnames = ["date", *PARAMS.values()]
-    with CSV_PATH.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        for date in sorted(all_rows):
-            writer.writerow(all_rows[date])
+def upsert_rows(conn: pymssql.Connection, rows: dict[str, dict]) -> int:
+    if not rows:
+        return 0
 
+    set_clause = ", ".join(f"target.{c} = source.{c}" for c in COLUMNS)
+    insert_cols = ", ".join(["obs_date", *COLUMNS])
+    insert_vals = ", ".join(["source.obs_date", *[f"source.{c}" for c in COLUMNS]])
+    placeholders = ", ".join(["%s"] * (1 + len(COLUMNS)))
 
-def write_json(all_rows: dict[str, dict]) -> None:
-    dates_sorted = sorted(all_rows)[-JSON_WINDOW_DAYS:]
-    payload = {
-        "station": "KLO",
-        "station_name": "Zürich-Kloten",
-        "source": "MeteoSchweiz (opendata.swiss) - Source: MeteoSchweiz",
-        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "fields": list(PARAMS.values()),
-        "days": [all_rows[d] for d in dates_sorted],
-    }
-    JSON_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    # One parameterized MERGE per row using a VALUES(...) source. This keeps
+    # everything server-side and idempotent (safe to re-run / re-collect).
+    merge_sql = f"""
+        MERGE dbo.klo_daily AS target
+        USING (VALUES ({placeholders})) AS source ({', '.join(['obs_date', *COLUMNS])})
+        ON target.obs_date = source.obs_date
+        WHEN MATCHED THEN
+            UPDATE SET {set_clause}, updated_at = SYSUTCDATETIME()
+        WHEN NOT MATCHED THEN
+            INSERT ({insert_cols}) VALUES ({insert_vals});
+    """
+
+    cursor = conn.cursor()
+    count = 0
+    for date in sorted(rows):
+        entry = rows[date]
+        values = [date] + [entry.get(c) for c in COLUMNS]
+        cursor.execute(merge_sql, tuple(values))
+        count += 1
+    conn.commit()
+    return count
 
 
 def main() -> None:
-    existing = load_existing_csv()
-    print(f"Vorhandene Tage im Archiv: {len(existing)}")
-
     all_new: dict[str, dict] = {}
     for url in (HISTORICAL_URL, RECENT_URL):
         try:
@@ -170,11 +161,15 @@ def main() -> None:
         print("Keine neuen Daten erhalten, breche ab ohne Aenderungen.", file=sys.stderr)
         sys.exit(1)
 
-    merged = {**existing, **all_new}
-    write_csv(merged)
-    write_json(merged)
-    print(f"Fertig. Archiv enthaelt jetzt {len(merged)} Tage ({CSV_PATH}).")
+    conn = get_connection()
+    try:
+        written = upsert_rows(conn, all_new)
+    finally:
+        conn.close()
+
+    print(f"Fertig. {written} Tage in Azure SQL Database geschrieben/aktualisiert.")
 
 
 if __name__ == "__main__":
     main()
+
