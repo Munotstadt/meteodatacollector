@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
 MeteoDataCollector - Sammelt Tageswerte der MeteoSchweiz-Station
-Zürich-Kloten (KLO) und schreibt sie direkt in eine Azure SQL Database
-(Tabelle dbo.klo_daily, ein UPSERT pro Tag).
+Zürich-Kloten (KLO), schreibt sie in eine Azure SQL Database (Tabelle
+dbo.klo_daily, Archiv/Quelle der Wahrheit) und exportiert zusaetzlich eine
+statische data/klo_daily.json ins Repo. Die Website liest diese JSON-Datei
+(schnell, immer verfuegbar) statt live gegen die - oft schlafende -
+Serverless-DB zu fragen.
 
 Quelle: MeteoSchweiz Open Government Data (OGD-SMN)
 https://opendatadocs.meteoswiss.ch/a-data-groundbased/a1-automatic-weather-stations
@@ -19,10 +22,12 @@ from __future__ import annotations
 
 import csv
 import io
+import json
 import os
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timezone
+from pathlib import Path
 
 import urllib.request
 import pymssql
@@ -45,6 +50,10 @@ PARAMS = {
     "ure200d0": "humidity_pct",
 }
 COLUMNS = list(PARAMS.values())  # DB column order (excluding obs_date)
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = REPO_ROOT / "data"
+JSON_PATH = DATA_DIR / "klo_daily.json"
 
 TIMESTAMP_COL_CANDIDATES = ("reference_timestamp", "REFERENCE_TS")
 
@@ -185,6 +194,38 @@ def upsert_rows(conn: pymssql.Connection, rows: dict[str, dict], batch_size: int
     return written
 
 
+def export_json(conn: pymssql.Connection) -> int:
+    """Liest dbo.klo_daily komplett zurueck und schreibt data/klo_daily.json.
+
+    Die DB bleibt die Quelle der Wahrheit; diese Datei ist ein schneller,
+    statischer Cache davon, den die Website ohne Live-DB-Zugriff laden kann.
+    """
+    cursor = conn.cursor(as_dict=True)
+    cursor.execute(f"SELECT obs_date, {', '.join(COLUMNS)} FROM dbo.klo_daily ORDER BY obs_date")
+    rows = cursor.fetchall()
+
+    days = []
+    for row in rows:
+        entry = {"date": row["obs_date"].isoformat()}
+        for col in COLUMNS:
+            val = row.get(col)
+            entry[col] = float(val) if val is not None else None
+        days.append(entry)
+
+    payload = {
+        "station": "KLO",
+        "station_name": "Zürich-Kloten",
+        "source": "MeteoSchweiz (opendata.swiss) - Source: MeteoSchweiz",
+        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "fields": COLUMNS,
+        "days": days,
+    }
+
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    JSON_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    return len(days)
+
+
 def main() -> None:
     all_new: dict[str, dict] = {}
     for url in (HISTORICAL_URL, RECENT_URL):
@@ -204,10 +245,12 @@ def main() -> None:
     conn = get_connection()
     try:
         written = upsert_rows(conn, all_new)
+        exported = export_json(conn)
     finally:
         conn.close()
 
     print(f"Fertig. {written} Tage in Azure SQL Database geschrieben/aktualisiert.")
+    print(f"Export: {exported} Tage nach {JSON_PATH} geschrieben.")
 
 
 if __name__ == "__main__":
