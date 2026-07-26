@@ -107,6 +107,18 @@
   .price, .time{ font-family: 'IBM Plex Mono', monospace; text-align: right; color: var(--text); white-space: nowrap; }
   .time{ color: var(--muted); font-size: 13px; text-align: left; }
 
+  .name{ font-weight: 500; }
+
+  .chg{
+    font-family: 'IBM Plex Mono', monospace;
+    text-align: right;
+    white-space: nowrap;
+    font-size: 13px;
+  }
+  .chg.up{ color: var(--gain); }
+  .chg.down{ color: var(--loss); }
+  .chg.flat{ color: var(--muted); }
+
   .empty, .error{
     padding: 40px 10px; text-align: center; color: var(--muted);
     font-family: 'IBM Plex Mono', monospace; font-size: 13px;
@@ -120,6 +132,15 @@
     font-weight: 700;
     font-size: 24px;
     margin: 0 0 4px;
+  }
+
+  .stand-badge{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    vertical-align: middle;
+    margin-left: 4px;
   }
 
   .detail-sub{ font-family: 'Inter', sans-serif; font-size: 14px; color: var(--muted); margin: 0 0 12px; }
@@ -181,6 +202,8 @@
     .return-value{ font-size: 17px; }
     #historyTable thead th:nth-child(6), #historyTable tbody td:nth-child(6),
     #historyTable thead th:nth-child(7), #historyTable tbody td:nth-child(7) { display: none; }
+    #comparisonTable thead th:nth-child(4), #comparisonTable tbody td:nth-child(4),
+    #comparisonTable thead th:nth-child(5), #comparisonTable tbody td:nth-child(5) { display: none; }
   }
 </style>
 </head>
@@ -199,7 +222,7 @@
   </div>
 
   <div class="detail-header">
-    <h2>Zürich-Kloten</h2>
+    <h2>Zürich-Kloten <span class="stand-badge" id="standBadge"></span></h2>
     <p class="detail-sub">SwissMetNet Wetterstation KLO · 426 m ü. M.</p>
 
     <div class="detail-returns" id="detailReturns">
@@ -214,8 +237,6 @@
       <div class="return-box"><span class="return-label">Wind Max</span><span class="return-value" id="valWindMax">—</span><span class="return-abs" id="valWindMaxAbs"></span></div>
       <div class="return-box"><span class="return-label">Luftfeuchtigkeit</span><span class="return-value" id="valHum">—</span><span class="return-abs" id="valHumAbs"></span></div>
     </div>
-
-    <div class="detail-meta" id="detailMeta">—</div>
   </div>
 
   <div class="range-selector" id="rangeSelector">
@@ -244,6 +265,24 @@
   <div class="history-title">Relative Luftfeuchtigkeit — Tagesmittel (%)</div>
   <div class="chart-wrap" id="chartHum"><div class="chart-empty">Loading chart…</div></div>
 
+  <div class="history-title">Vergleich — Tagesdurchschnitte</div>
+  <table id="comparisonTable">
+    <thead>
+      <tr>
+        <th>Kennzahl</th>
+        <th class="num">7 Tage Ø</th>
+        <th class="num">Δ vs. Vorwoche</th>
+        <th class="num">Monat Ø</th>
+        <th class="num">Δ vs. Vorjahr</th>
+        <th class="num">YTD Ø</th>
+        <th class="num">Δ vs. Vorjahr</th>
+      </tr>
+    </thead>
+    <tbody id="comparisonBody">
+      <tr><td colspan="7" class="empty">Loading…</td></tr>
+    </tbody>
+  </table>
+
   <div class="history-title">Letzte Messwerte</div>
   <table id="historyTable">
     <thead>
@@ -264,12 +303,12 @@
 
   <div class="footer">
     <span>Daten: MeteoSchweiz, Station Zürich-Kloten (KLO) · Source: MeteoSchweiz</span>
-    <span id="lastSynced">—</span>
+    <span id="detailMeta">—</span>
   </div>
 </div>
 
 <script>
-  const DATA_URL = "./data/klo_daily.json";
+  const DATA_URL = "/api/klo-daily";
 
   function fmt1(n){ return n == null ? '—' : n.toLocaleString('de-CH', { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
   function fmt0(n){ return n == null ? '—' : Math.round(n).toLocaleString('de-CH'); }
@@ -475,10 +514,88 @@
     container.innerHTML = svg;
   }
 
+  function addDays(date, n){
+    const d = new Date(date);
+    d.setDate(d.getDate() + n);
+    return d;
+  }
+
+  function periodAvg(days, start, end, getValue){
+    const vals = [];
+    for (let i = 0; i < days.length; i++) {
+      const d = days[i];
+      if (d._date >= start && d._date <= end) {
+        const v = getValue(d);
+        if (v != null) vals.push(v);
+      }
+    }
+    if (vals.length === 0) return null;
+    return vals.reduce(function(a, b){ return a + b; }, 0) / vals.length;
+  }
+
+  function fmtCompVal(v, decimals, unit){
+    return v == null ? '—' : v.toFixed(decimals) + unit;
+  }
+
+  function fmtCompDelta(current, reference, decimals, unit){
+    if (current == null || reference == null) return { text: '—', dir: 'flat' };
+    const diff = current - reference;
+    const dir = diff > 0.05 ? 'up' : diff < -0.05 ? 'down' : 'flat';
+    return { text: (diff > 0 ? '+' : '') + diff.toFixed(decimals) + unit, dir: dir };
+  }
+
+  function renderComparisonTable(days, latestDate){
+    // Zeitraeume, alle relativ zum juengsten Datenpunkt (nicht zum echten
+    // "heute"), damit es auch bei etwas verspaeteten Daten stimmt.
+    const last7Start = addDays(latestDate, -6), last7End = latestDate;
+    const prev7Start = addDays(latestDate, -13), prev7End = addDays(latestDate, -7);
+
+    const monthStart = new Date(latestDate.getFullYear(), latestDate.getMonth(), 1);
+    const monthEnd = latestDate;
+    const monthPrevYearStart = new Date(latestDate.getFullYear() - 1, latestDate.getMonth(), 1);
+    const monthPrevYearEnd = new Date(latestDate.getFullYear() - 1, latestDate.getMonth(), latestDate.getDate());
+
+    const ytdStart = new Date(latestDate.getFullYear(), 0, 1);
+    const ytdEnd = latestDate;
+    const ytdPrevYearStart = new Date(latestDate.getFullYear() - 1, 0, 1);
+    const ytdPrevYearEnd = new Date(latestDate.getFullYear() - 1, latestDate.getMonth(), latestDate.getDate());
+
+    const metrics = [
+      { label: 'Temperatur', unit: '°C', decimals: 1, get: function(d){ return d.temp_mean_c; } },
+      { label: 'Sonnenschein', unit: ' h', decimals: 1, get: function(d){ return d.sunshine_min != null ? d.sunshine_min / 60 : null; } },
+      { label: 'Niederschlag', unit: ' mm', decimals: 1, get: function(d){ return d.precip_mm; } },
+      { label: 'Globalstrahlung', unit: ' W/m²', decimals: 0, get: function(d){ return d.radiation_wm2; } },
+    ];
+
+    const rowsHtml = metrics.map(function(m){
+      const w1 = periodAvg(days, last7Start, last7End, m.get);
+      const w0 = periodAvg(days, prev7Start, prev7End, m.get);
+      const mo1 = periodAvg(days, monthStart, monthEnd, m.get);
+      const mo0 = periodAvg(days, monthPrevYearStart, monthPrevYearEnd, m.get);
+      const y1 = periodAvg(days, ytdStart, ytdEnd, m.get);
+      const y0 = periodAvg(days, ytdPrevYearStart, ytdPrevYearEnd, m.get);
+
+      const wDelta = fmtCompDelta(w1, w0, m.decimals, m.unit);
+      const moDelta = fmtCompDelta(mo1, mo0, m.decimals, m.unit);
+      const yDelta = fmtCompDelta(y1, y0, m.decimals, m.unit);
+
+      return '<tr>' +
+        '<td class="name">' + m.label + '</td>' +
+        '<td class="price">' + fmtCompVal(w1, m.decimals, m.unit) + '</td>' +
+        '<td class="chg ' + wDelta.dir + '">' + wDelta.text + '</td>' +
+        '<td class="price">' + fmtCompVal(mo1, m.decimals, m.unit) + '</td>' +
+        '<td class="chg ' + moDelta.dir + '">' + moDelta.text + '</td>' +
+        '<td class="price">' + fmtCompVal(y1, m.decimals, m.unit) + '</td>' +
+        '<td class="chg ' + yDelta.dir + '">' + yDelta.text + '</td>' +
+      '</tr>';
+    }).join('');
+
+    document.getElementById('comparisonBody').innerHTML = rowsHtml;
+  }
+
   async function init() {
     const dot = document.getElementById('statusDot');
     const statusText = document.getElementById('statusText');
-    const lastSynced = document.getElementById('lastSynced');
 
     try {
       const resp = await fetch(DATA_URL, { cache: 'no-store' });
@@ -492,7 +609,6 @@
 
       dot.classList.remove('stale');
       statusText.textContent = 'live';
-      lastSynced.textContent = 'synced ' + new Date().toLocaleTimeString('de-CH');
 
       setCard('TempMean', latest.temp_mean_c, prev ? prev.temp_mean_c : null, '°C', 1);
       setCard('TempMin', latest.temp_min_c, prev ? prev.temp_min_c : null, '°C', 1);
@@ -506,8 +622,9 @@
       setCard('WindMax', latest.wind_max_kmh, prev ? prev.wind_max_kmh : null, ' km/h', 1);
       setCard('Hum', latest.humidity_pct, prev ? prev.humidity_pct : null, ' %', 0);
 
+      document.getElementById('standBadge').textContent = 'Stand ' + fmtDate(latest.date);
       document.getElementById('detailMeta').textContent =
-        'Stand ' + fmtDate(latest.date) + ' · Quelle: MeteoSchweiz · ' + days.length + ' Tage im Archiv';
+        'Quelle: MeteoSchweiz · ' + days.length + ' Tage im Archiv';
 
       let currentRange = '90D';
       const chartContainers = {
@@ -539,6 +656,7 @@
       });
 
       renderCharts();
+      renderComparisonTable(days, latest._date);
 
       const sortedDesc = days.slice().sort(function(a, b){ return b._date - a._date; }).slice(0, 30);
       document.getElementById('historyBody').innerHTML = sortedDesc.map(function(d){
@@ -560,6 +678,7 @@
       ['chartTemp','chartPrecip','chartSun','chartRad','chartWind','chartHum'].forEach(function(id){
         document.getElementById(id).innerHTML = '<div class="chart-empty">Konnte Daten nicht laden: ' + err.message + '</div>';
       });
+      document.getElementById('comparisonBody').innerHTML = '<tr><td colspan="7" class="error">Konnte Daten nicht laden: ' + err.message + '</td></tr>';
       document.getElementById('historyBody').innerHTML = '<tr><td colspan="7" class="error">Konnte Daten nicht laden: ' + err.message + '</td></tr>';
     }
   }
