@@ -39,7 +39,6 @@ COLUMNS = [
     "sunshine_min",
     "radiation_wm2",
     "wind_mean_kmh",
-    "wind_min_kmh",
     "wind_max_kmh",
     "humidity_pct",
 ]
