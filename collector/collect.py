@@ -21,6 +21,7 @@ import csv
 import io
 import os
 import sys
+import time
 from datetime import datetime
 
 import urllib.request
@@ -40,8 +41,7 @@ PARAMS = {
     "sre000d0": "sunshine_min",
     "gre000d0": "radiation_wm2",
     "fu3010d0": "wind_mean_kmh",
-    "fu3010dn": "wind_min_kmh",
-    "fu3010dx": "wind_max_kmh",
+    "fu3010d1": "wind_max_kmh",  # Böenspitze (1s), Tagesmaximum - kein Tagesminimum verfügbar
     "ure200d0": "humidity_pct",
 }
 COLUMNS = list(PARAMS.values())  # DB column order (excluding obs_date)
@@ -105,15 +105,37 @@ def normalize_rows(raw_rows: list[dict]) -> dict[str, dict]:
     return out
 
 
-def get_connection() -> pymssql.Connection:
+def get_connection(max_attempts: int = 6) -> pymssql.Connection:
     server = os.environ["AZURE_SQL_SERVER"]
     database = os.environ["AZURE_SQL_DATABASE"]
     user = os.environ["AZURE_SQL_USER"]
     password = os.environ["AZURE_SQL_PASSWORD"]
-    return pymssql.connect(
-        server=server, database=database, user=user, password=password,
-        timeout=60, login_timeout=30,
-    )
+
+    # Azure SQL Database Serverless auto-pauses after inactivity. The first
+    # connection attempt after a pause triggers error 40613 ("Database ...
+    # is not currently available") while it resumes - this is expected and
+    # normally resolves within 30-60 seconds, so we retry with backoff
+    # instead of failing immediately.
+    delays = [5, 10, 20, 30, 45, 60][: max_attempts - 1]
+    last_error: Exception | None = None
+    for attempt in range(1, max_attempts + 1):
+        try:
+            return pymssql.connect(
+                server=server, database=database, user=user, password=password,
+                timeout=60, login_timeout=30,
+            )
+        except pymssql.exceptions.OperationalError as exc:
+            last_error = exc
+            if attempt == max_attempts:
+                break
+            wait = delays[attempt - 1]
+            print(
+                f"WARNUNG: DB-Verbindung fehlgeschlagen (Versuch {attempt}/{max_attempts}): {exc}\n"
+                f"  -> Datenbank wacht vermutlich aus Serverless-Pause auf, warte {wait}s und versuche erneut.",
+                file=sys.stderr,
+            )
+            time.sleep(wait)
+    raise last_error  # noqa: RSE102
 
 
 def upsert_rows(conn: pymssql.Connection, rows: dict[str, dict], batch_size: int = 200) -> int:
