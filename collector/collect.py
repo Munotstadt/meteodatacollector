@@ -110,39 +110,57 @@ def get_connection() -> pymssql.Connection:
     database = os.environ["AZURE_SQL_DATABASE"]
     user = os.environ["AZURE_SQL_USER"]
     password = os.environ["AZURE_SQL_PASSWORD"]
-    return pymssql.connect(server=server, database=database, user=user, password=password, timeout=60)
+    return pymssql.connect(
+        server=server, database=database, user=user, password=password,
+        timeout=60, login_timeout=30,
+    )
 
 
-def upsert_rows(conn: pymssql.Connection, rows: dict[str, dict]) -> int:
+def upsert_rows(conn: pymssql.Connection, rows: dict[str, dict], batch_size: int = 200) -> int:
     if not rows:
         return 0
 
     set_clause = ", ".join(f"target.{c} = source.{c}" for c in COLUMNS)
     insert_cols = ", ".join(["obs_date", *COLUMNS])
     insert_vals = ", ".join(["source.obs_date", *[f"source.{c}" for c in COLUMNS]])
-    placeholders = ", ".join(["%s"] * (1 + len(COLUMNS)))
-
-    # One parameterized MERGE per row using a VALUES(...) source. This keeps
-    # everything server-side and idempotent (safe to re-run / re-collect).
-    merge_sql = f"""
-        MERGE dbo.klo_daily AS target
-        USING (VALUES ({placeholders})) AS source ({', '.join(['obs_date', *COLUMNS])})
-        ON target.obs_date = source.obs_date
-        WHEN MATCHED THEN
-            UPDATE SET {set_clause}, updated_at = SYSUTCDATETIME()
-        WHEN NOT MATCHED THEN
-            INSERT ({insert_cols}) VALUES ({insert_vals});
-    """
+    col_list = ", ".join(["obs_date", *COLUMNS])
+    row_placeholder = "(" + ", ".join(["%s"] * (1 + len(COLUMNS))) + ")"
 
     cursor = conn.cursor()
-    count = 0
-    for date in sorted(rows):
-        entry = rows[date]
-        values = [date] + [entry.get(c) for c in COLUMNS]
-        cursor.execute(merge_sql, tuple(values))
-        count += 1
+    dates = sorted(rows)
+    total = len(dates)
+    written = 0
+
+    for start in range(0, total, batch_size):
+        chunk = dates[start:start + batch_size]
+        values_sql = ", ".join([row_placeholder] * len(chunk))
+
+        # One MERGE per batch: many rows pushed to Azure in a single
+        # round-trip instead of one network call per day. This is what
+        # makes a full historical backfill (thousands of days) finish in
+        # seconds/minutes instead of tens of minutes.
+        merge_sql = f"""
+            MERGE dbo.klo_daily AS target
+            USING (VALUES {values_sql}) AS source ({col_list})
+            ON target.obs_date = source.obs_date
+            WHEN MATCHED THEN
+                UPDATE SET {set_clause}, updated_at = SYSUTCDATETIME()
+            WHEN NOT MATCHED THEN
+                INSERT ({insert_cols}) VALUES ({insert_vals});
+        """
+
+        params: list = []
+        for date in chunk:
+            entry = rows[date]
+            params.append(date)
+            params.extend(entry.get(c) for c in COLUMNS)
+
+        cursor.execute(merge_sql, tuple(params))
+        written += len(chunk)
+        print(f"  ... {written}/{total} Tage geschrieben", file=sys.stderr)
+
     conn.commit()
-    return count
+    return written
 
 
 def main() -> None:
