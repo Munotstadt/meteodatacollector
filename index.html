@@ -219,20 +219,30 @@
     background: linear-gradient(90deg, var(--line), var(--station-color, var(--text)));
   }
 
-  .range-marker{
+  /* Value label: clamped so it never overflows the card, independent of
+     the arrow's exact position. */
+  .range-marker-value-wrap{
     position: absolute; top: -24px; left: 0%;
-    transform: translateX(-50%);
-    text-align: center;
     white-space: nowrap;
     transition: left 0.2s ease;
   }
+  .range-marker-value-wrap.align-center{ transform: translateX(-50%); text-align: center; }
+  .range-marker-value-wrap.align-left{ transform: translateX(0%); text-align: left; }
+  .range-marker-value-wrap.align-right{ transform: translateX(-100%); text-align: right; }
 
   .range-marker-value{
     font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; color: var(--text);
   }
 
+  /* Arrow: always exactly centered on the true data point on the track. */
+  .range-marker-arrow-wrap{
+    position: absolute; top: -6px; left: 0%;
+    transform: translateX(-50%);
+    transition: left 0.2s ease;
+  }
+
   .range-marker-arrow{
-    width: 0; height: 0; margin: 2px auto 0;
+    width: 0; height: 0;
     border-left: 5px solid transparent; border-right: 5px solid transparent;
     border-top: 6px solid var(--text);
   }
@@ -354,8 +364,10 @@
     <div class="hydro-card">
       <div class="hydro-card-label">Rhein Neuhausen — Abfluss (m³/s)</div>
       <div class="range-bar-wrap">
-        <div class="range-marker" id="markerRhein">
+        <div class="range-marker-value-wrap align-center" id="markerRhein">
           <span class="range-marker-value" id="markerRheinValue">—</span>
+        </div>
+        <div class="range-marker-arrow-wrap" id="arrowRhein">
           <div class="range-marker-arrow"></div>
         </div>
         <div class="range-track" id="trackRhein"></div>
@@ -370,8 +382,10 @@
     <div class="hydro-card">
       <div class="hydro-card-label">Bodensee Berlingen — Pegel (m ü. M.)</div>
       <div class="range-bar-wrap">
-        <div class="range-marker" id="markerBodensee">
+        <div class="range-marker-value-wrap align-center" id="markerBodensee">
           <span class="range-marker-value" id="markerBodenseeValue">—</span>
+        </div>
+        <div class="range-marker-arrow-wrap" id="arrowBodensee">
           <div class="range-marker-arrow"></div>
         </div>
         <div class="range-track" id="trackBodensee"></div>
@@ -386,8 +400,10 @@
     <div class="hydro-card">
       <div class="hydro-card-label">Glatt Rheinsfelden — Abfluss (m³/s)</div>
       <div class="range-bar-wrap">
-        <div class="range-marker" id="markerGlatt">
+        <div class="range-marker-value-wrap align-center" id="markerGlatt">
           <span class="range-marker-value" id="markerGlattValue">—</span>
+        </div>
+        <div class="range-marker-arrow-wrap" id="arrowGlatt">
           <div class="range-marker-arrow"></div>
         </div>
         <div class="range-track" id="trackGlatt"></div>
@@ -808,6 +824,7 @@
   function renderRangeBar(prefix, readings, key, decimals, unit, color) {
     const track = document.getElementById('track' + prefix);
     const marker = document.getElementById('marker' + prefix);
+    const arrow = document.getElementById('arrow' + prefix);
     const markerValue = document.getElementById('marker' + prefix + 'Value');
     const minValEl = document.getElementById('min' + prefix);
     const minDateEl = document.getElementById('min' + prefix + 'Date');
@@ -838,7 +855,18 @@
 
     const span = maxPoint.v - minPoint.v;
     const pct = span > 0 ? ((current.v - minPoint.v) / span) * 100 : 50;
-    marker.style.left = Math.max(0, Math.min(100, pct)) + '%';
+    const clampedPct = Math.max(0, Math.min(100, pct));
+
+    // Pfeil bleibt immer exakt am wahren Datenpunkt.
+    arrow.style.left = clampedPct + '%';
+
+    // Text-Label wird nahe den Raendern anders verankert, damit es nie
+    // ueber die Karte hinausragt: links am Rand -> linksbuendig zum Pfeil
+    // (Text waechst nach rechts), rechts am Rand -> rechtsbuendig zum
+    // Pfeil (Text waechst nach links), sonst zentriert.
+    marker.style.left = clampedPct + '%';
+    marker.className = 'range-marker-value-wrap ' +
+      (clampedPct <= 15 ? 'align-left' : clampedPct >= 85 ? 'align-right' : 'align-center');
     markerValue.textContent = fmtHydroVal(current.v, decimals) + unit;
 
     minValEl.textContent = fmtHydroVal(minPoint.v, decimals) + unit;
