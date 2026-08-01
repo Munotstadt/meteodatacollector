@@ -298,14 +298,31 @@
     </tbody>
   </table>
 
+  <div class="history-title">Hydrologie — Aktuelle Messwerte (BAFU)</div>
+  <div class="detail-returns" id="hydroReturns">
+    <div class="return-box"><span class="return-label">Rhein Neuhausen</span><span class="return-value" id="valRhein">—</span><span class="return-abs" id="valRheinAbs"></span></div>
+    <div class="return-box"><span class="return-label">Bodensee Berlingen</span><span class="return-value" id="valBodensee">—</span><span class="return-abs" id="valBodenseeAbs"></span></div>
+    <div class="return-box"><span class="return-label">Glatt Rheinsfelden</span><span class="return-value" id="valGlatt">—</span><span class="return-abs" id="valGlattAbs"></span></div>
+  </div>
+
+  <div class="history-title">Rhein — Abfluss Neuhausen (m³/s)</div>
+  <div class="chart-wrap" id="chartRhein"><div class="chart-empty">Loading chart…</div></div>
+
+  <div class="history-title">Bodensee — Pegel Berlingen (m ü. M.)</div>
+  <div class="chart-wrap" id="chartBodensee"><div class="chart-empty">Loading chart…</div></div>
+
+  <div class="history-title">Glatt — Abfluss Rheinsfelden (m³/s)</div>
+  <div class="chart-wrap" id="chartGlatt"><div class="chart-empty">Loading chart…</div></div>
+
   <div class="footer">
-    <span>Daten: MeteoSchweiz, Station Zürich-Kloten (KLO) · Source: MeteoSchweiz</span>
+    <span>Daten: MeteoSchweiz (KLO) · Source: MeteoSchweiz · Hydrodaten: Bundesamt für Umwelt BAFU (LINDAS) - Source: BAFU</span>
     <span id="detailMeta">—</span>
   </div>
 </div>
 
 <script>
   const DATA_URL = "./data/klo_daily.json";
+  const HYDRO_DATA_URL = "./data/hydro_latest.json";
 
   function fmt1(n){ return n == null ? '—' : n.toLocaleString('de-CH', { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
   function fmt0(n){ return n == null ? '—' : Math.round(n).toLocaleString('de-CH'); }
@@ -473,8 +490,6 @@
     function yScale(v){ return pad.top + innerH - ((v - yMin) / (yMax - yMin || 1)) * innerH; }
 
     const barColor = opts.color || '#1F6FA8';
-    // Bar width derived from the average spacing between points, capped so
-    // dense ranges (e.g. "Alle") still render as visible slivers.
     const avgSpacing = xSpan / (points.length - 1);
     const barW = Math.max(1, Math.min(14, (avgSpacing / xSpan) * innerW * 0.7));
 
@@ -542,8 +557,6 @@
   }
 
   function renderComparisonTable(days, latestDate){
-    // Zeitraeume, alle relativ zum juengsten Datenpunkt (nicht zum echten
-    // "heute"), damit es auch bei etwas verspaeteten Daten stimmt.
     const last7Start = addDays(latestDate, -6), last7End = latestDate;
     const prev7Start = addDays(latestDate, -13), prev7End = addDays(latestDate, -7);
 
@@ -679,7 +692,69 @@
     }
   }
 
+  // ---------------- Hydrologie (BAFU / LINDAS) ----------------
+  // Eigener, unabhaengiger Block: ein Problem hier soll die Meteo-Anzeige
+  // oben nicht mitreissen (daher eigenes try/catch, eigener fetch).
+
+  function parseISODateTime(iso){ return new Date(iso); }
+
+  function fmtHydroVal(v, decimals, unit){
+    return v == null ? '—' : v.toLocaleString('de-CH', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + unit;
+  }
+
+  async function initHydro(){
+    const stations = {
+      rhein:     { valId: 'valRhein',     absId: 'valRheinAbs',     chartId: 'chartRhein',     stationId: '2288', key: 'discharge_m3s',  unit: ' m³/s', decimals: 1, color: '#1F6FA8' },
+      bodensee:  { valId: 'valBodensee',  absId: 'valBodenseeAbs',  chartId: 'chartBodensee',  stationId: '2043', key: 'water_level_m',  unit: ' m',    decimals: 2, color: '#1F8A6E' },
+      glatt:     { valId: 'valGlatt',     absId: 'valGlattAbs',     chartId: 'chartGlatt',     stationId: '2415', key: 'discharge_m3s',  unit: ' m³/s', decimals: 2, color: '#8A5CC0' }
+    };
+
+    try {
+      const resp = await fetch(HYDRO_DATA_URL, { cache: 'no-store' });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+
+      Object.keys(stations).forEach(function(key){
+        const cfg = stations[key];
+        const station = data.stations ? data.stations[cfg.stationId] : null;
+        const readings = (station && station.readings) ? station.readings.map(function(r){
+          return Object.assign({}, r, { _date: parseISODateTime(r.time) });
+        }) : [];
+
+        const valEl = document.getElementById(cfg.valId);
+        const absEl = document.getElementById(cfg.absId);
+        const chartEl = document.getElementById(cfg.chartId);
+
+        if (readings.length === 0) {
+          valEl.textContent = '—';
+          absEl.textContent = '';
+          chartEl.innerHTML = '<div class="chart-empty">Noch keine Daten vorhanden.</div>';
+          return;
+        }
+
+        const latest = readings[readings.length - 1];
+        valEl.textContent = fmtHydroVal(latest[cfg.key], cfg.decimals, cfg.unit);
+        valEl.className = 'return-value flat';
+
+        const dd = String(latest._date.getDate()).padStart(2,'0');
+        const mm = String(latest._date.getMonth()+1).padStart(2,'0');
+        const hh = String(latest._date.getHours()).padStart(2,'0');
+        const mi = String(latest._date.getMinutes()).padStart(2,'0');
+        absEl.textContent = dd + '.' + mm + ' ' + hh + ':' + mi + ' Uhr';
+
+        drawLineChart(chartEl, readings, cfg.key, { color: cfg.color });
+      });
+
+    } catch (err) {
+      Object.keys(stations).forEach(function(key){
+        document.getElementById(stations[key].chartId).innerHTML =
+          '<div class="chart-empty">Konnte Hydrodaten nicht laden: ' + err.message + '</div>';
+      });
+    }
+  }
+
   init();
+  initHydro();
 </script>
 
 </body>
