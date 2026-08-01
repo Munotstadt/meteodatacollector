@@ -186,6 +186,20 @@
     text-transform: uppercase; color: var(--accent); margin: 32px 0 6px;
   }
 
+  .collapsible-toggle{
+    display: flex; align-items: center; gap: 6px;
+    background: none; border: none; padding: 0; margin: 32px 0 6px;
+    cursor: pointer; width: 100%; text-align: left;
+  }
+  .collapsible-toggle:hover .collapsible-arrow{ color: var(--text); }
+  .collapsible-toggle:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .collapsible-arrow{
+    display: inline-block; font-size: 9px; color: var(--muted);
+    transition: transform 0.15s ease, color 0.15s ease;
+  }
+  .collapsible-toggle[aria-expanded="true"] .collapsible-arrow{ transform: rotate(90deg); }
+
   .chart-wrap{
     margin: 0 0 8px; background: var(--panel); border: 1px solid var(--line);
     border-radius: var(--radius); padding: 20px 16px 12px;
@@ -341,8 +355,10 @@
     </tbody>
   </table>
 
-  <div class="history-title">Letzte Messwerte</div>
-  <table id="historyTable">
+  <button type="button" class="history-title collapsible-toggle" id="historyToggle" aria-expanded="false">
+    <span class="collapsible-arrow">▶</span> Letzte Messwerte
+  </button>
+  <table id="historyTable" class="collapsible-content" hidden>
     <thead>
       <tr>
         <th>Datum</th>
@@ -920,6 +936,13 @@
       });
     }
   }
+
+  document.getElementById('historyToggle').addEventListener('click', function(){
+    const table = document.getElementById('historyTable');
+    const expanded = this.getAttribute('aria-expanded') === 'true';
+    this.setAttribute('aria-expanded', String(!expanded));
+    table.hidden = expanded;
+  });
 
   init();
   initHydro();
