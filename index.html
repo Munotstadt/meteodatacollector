@@ -198,6 +198,57 @@
     font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); flex-wrap: wrap; gap: 6px;
   }
 
+  /* ---------- Hydro range-bar cards ---------- */
+
+  .hydro-cards{ display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+
+  .hydro-card{
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 14px 18px 16px;
+  }
+
+  .hydro-card-label{
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 26px;
+  }
+
+  .range-bar-wrap{ position: relative; margin: 0 2px 10px; }
+
+  .range-track{
+    height: 6px; border-radius: 3px;
+    background: linear-gradient(90deg, var(--line), var(--station-color, var(--text)));
+  }
+
+  .range-marker{
+    position: absolute; top: -24px; left: 0%;
+    transform: translateX(-50%);
+    text-align: center;
+    white-space: nowrap;
+    transition: left 0.2s ease;
+  }
+
+  .range-marker-value{
+    font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; color: var(--text);
+  }
+
+  .range-marker-arrow{
+    width: 0; height: 0; margin: 2px auto 0;
+    border-left: 5px solid transparent; border-right: 5px solid transparent;
+    border-top: 6px solid var(--text);
+  }
+
+  .range-labels{ display: flex; justify-content: space-between; gap: 10px; }
+
+  .range-label-min, .range-label-max{ display: flex; flex-direction: column; }
+  .range-label-max{ align-items: flex-end; }
+
+  .range-label-value{ font-family: 'IBM Plex Mono', monospace; font-size: 16px; font-weight: 600; }
+  .range-label-date{ font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .hydro-card-meta{
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 12px;
+  }
+
   @media (max-width: 560px){
     .return-value{ font-size: 17px; }
     #historyTable thead th:nth-child(6), #historyTable tbody td:nth-child(6),
@@ -299,10 +350,54 @@
   </table>
 
   <div class="history-title">Hydrologie — Aktuelle Messwerte (BAFU)</div>
-  <div class="detail-returns" id="hydroReturns">
-    <div class="return-box"><span class="return-label">Rhein Neuhausen</span><span class="return-value" id="valRhein">—</span><span class="return-abs" id="valRheinAbs"></span></div>
-    <div class="return-box"><span class="return-label">Bodensee Berlingen</span><span class="return-value" id="valBodensee">—</span><span class="return-abs" id="valBodenseeAbs"></span></div>
-    <div class="return-box"><span class="return-label">Glatt Rheinsfelden</span><span class="return-value" id="valGlatt">—</span><span class="return-abs" id="valGlattAbs"></span></div>
+  <div class="hydro-cards" id="hydroCards">
+    <div class="hydro-card">
+      <div class="hydro-card-label">Rhein Neuhausen — Abfluss (m³/s)</div>
+      <div class="range-bar-wrap">
+        <div class="range-marker" id="markerRhein">
+          <span class="range-marker-value" id="markerRheinValue">—</span>
+          <div class="range-marker-arrow"></div>
+        </div>
+        <div class="range-track" id="trackRhein"></div>
+      </div>
+      <div class="range-labels">
+        <div class="range-label-min"><span class="range-label-value" id="minRhein">—</span><span class="range-label-date" id="minRheinDate"></span></div>
+        <div class="range-label-max"><span class="range-label-value" id="maxRhein">—</span><span class="range-label-date" id="maxRheinDate"></span></div>
+      </div>
+      <div class="hydro-card-meta" id="metaRhein"></div>
+    </div>
+
+    <div class="hydro-card">
+      <div class="hydro-card-label">Bodensee Berlingen — Pegel (m ü. M.)</div>
+      <div class="range-bar-wrap">
+        <div class="range-marker" id="markerBodensee">
+          <span class="range-marker-value" id="markerBodenseeValue">—</span>
+          <div class="range-marker-arrow"></div>
+        </div>
+        <div class="range-track" id="trackBodensee"></div>
+      </div>
+      <div class="range-labels">
+        <div class="range-label-min"><span class="range-label-value" id="minBodensee">—</span><span class="range-label-date" id="minBodenseeDate"></span></div>
+        <div class="range-label-max"><span class="range-label-value" id="maxBodensee">—</span><span class="range-label-date" id="maxBodenseeDate"></span></div>
+      </div>
+      <div class="hydro-card-meta" id="metaBodensee"></div>
+    </div>
+
+    <div class="hydro-card">
+      <div class="hydro-card-label">Glatt Rheinsfelden — Abfluss (m³/s)</div>
+      <div class="range-bar-wrap">
+        <div class="range-marker" id="markerGlatt">
+          <span class="range-marker-value" id="markerGlattValue">—</span>
+          <div class="range-marker-arrow"></div>
+        </div>
+        <div class="range-track" id="trackGlatt"></div>
+      </div>
+      <div class="range-labels">
+        <div class="range-label-min"><span class="range-label-value" id="minGlatt">—</span><span class="range-label-date" id="minGlattDate"></span></div>
+        <div class="range-label-max"><span class="range-label-value" id="maxGlatt">—</span><span class="range-label-date" id="maxGlattDate"></span></div>
+      </div>
+      <div class="hydro-card-meta" id="metaGlatt"></div>
+    </div>
   </div>
 
   <div class="history-title">Rhein — Abfluss Neuhausen (m³/s)</div>
@@ -698,15 +793,73 @@
 
   function parseISODateTime(iso){ return new Date(iso); }
 
-  function fmtHydroVal(v, decimals, unit){
-    return v == null ? '—' : v.toLocaleString('de-CH', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + unit;
+  function fmtHydroVal(v, decimals){
+    return v == null ? '—' : v.toLocaleString('de-CH', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  }
+
+  function fmtHydroDateTime(date){
+    const dd = String(date.getDate()).padStart(2,'0');
+    const mm = String(date.getMonth()+1).padStart(2,'0');
+    const hh = String(date.getHours()).padStart(2,'0');
+    const mi = String(date.getMinutes()).padStart(2,'0');
+    return dd + '.' + mm + '.' + date.getFullYear() + ' ' + hh + ':' + mi;
+  }
+
+  function renderRangeBar(prefix, readings, key, decimals, unit, color) {
+    const track = document.getElementById('track' + prefix);
+    const marker = document.getElementById('marker' + prefix);
+    const markerValue = document.getElementById('marker' + prefix + 'Value');
+    const minValEl = document.getElementById('min' + prefix);
+    const minDateEl = document.getElementById('min' + prefix + 'Date');
+    const maxValEl = document.getElementById('max' + prefix);
+    const maxDateEl = document.getElementById('max' + prefix + 'Date');
+    const metaEl = document.getElementById('meta' + prefix);
+
+    const points = readings
+      .map(function(r){ return { v: r[key], date: r._date }; })
+      .filter(function(p){ return p.v != null; });
+
+    if (points.length === 0) {
+      markerValue.textContent = '—';
+      minValEl.textContent = '—'; minDateEl.textContent = '';
+      maxValEl.textContent = '—'; maxDateEl.textContent = '';
+      metaEl.textContent = 'Noch keine Daten vorhanden.';
+      return;
+    }
+
+    track.style.setProperty('--station-color', color);
+
+    let minPoint = points[0], maxPoint = points[0];
+    points.forEach(function(p){
+      if (p.v < minPoint.v) minPoint = p;
+      if (p.v > maxPoint.v) maxPoint = p;
+    });
+    const current = points[points.length - 1];
+
+    const span = maxPoint.v - minPoint.v;
+    const pct = span > 0 ? ((current.v - minPoint.v) / span) * 100 : 50;
+    marker.style.left = Math.max(0, Math.min(100, pct)) + '%';
+    markerValue.textContent = fmtHydroVal(current.v, decimals) + unit;
+
+    minValEl.textContent = fmtHydroVal(minPoint.v, decimals) + unit;
+    minDateEl.textContent = fmtHydroVal2Date(minPoint.date);
+    maxValEl.textContent = fmtHydroVal(maxPoint.v, decimals) + unit;
+    maxDateEl.textContent = fmtHydroVal2Date(maxPoint.date);
+
+    metaEl.textContent = 'Stand ' + fmtHydroDateTime(current.date) + ' Uhr · Min/Max seit Beginn der Aufzeichnung';
+  }
+
+  function fmtHydroVal2Date(date){
+    const dd = String(date.getDate()).padStart(2,'0');
+    const mm = String(date.getMonth()+1).padStart(2,'0');
+    return dd + '.' + mm + '.' + date.getFullYear();
   }
 
   async function initHydro(){
     const stations = {
-      rhein:     { valId: 'valRhein',     absId: 'valRheinAbs',     chartId: 'chartRhein',     stationId: '2288', key: 'discharge_m3s',  unit: ' m³/s', decimals: 1, color: '#1F6FA8' },
-      bodensee:  { valId: 'valBodensee',  absId: 'valBodenseeAbs',  chartId: 'chartBodensee',  stationId: '2043', key: 'water_level_m',  unit: ' m',    decimals: 2, color: '#1F8A6E' },
-      glatt:     { valId: 'valGlatt',     absId: 'valGlattAbs',     chartId: 'chartGlatt',     stationId: '2415', key: 'discharge_m3s',  unit: ' m³/s', decimals: 2, color: '#8A5CC0' }
+      Rhein:     { stationId: '2288', key: 'discharge_m3s', unit: ' m³/s', decimals: 1, color: '#1F6FA8', chartId: 'chartRhein' },
+      Bodensee:  { stationId: '2043', key: 'water_level_m', unit: ' m',    decimals: 2, color: '#1F8A6E', chartId: 'chartBodensee' },
+      Glatt:     { stationId: '2415', key: 'discharge_m3s', unit: ' m³/s', decimals: 2, color: '#8A5CC0', chartId: 'chartGlatt' }
     };
 
     try {
@@ -714,40 +867,27 @@
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       const data = await resp.json();
 
-      Object.keys(stations).forEach(function(key){
-        const cfg = stations[key];
+      Object.keys(stations).forEach(function(prefix){
+        const cfg = stations[prefix];
         const station = data.stations ? data.stations[cfg.stationId] : null;
         const readings = (station && station.readings) ? station.readings.map(function(r){
           return Object.assign({}, r, { _date: parseISODateTime(r.time) });
         }) : [];
 
-        const valEl = document.getElementById(cfg.valId);
-        const absEl = document.getElementById(cfg.absId);
+        renderRangeBar(prefix, readings, cfg.key, cfg.decimals, cfg.unit, cfg.color);
+
         const chartEl = document.getElementById(cfg.chartId);
-
-        if (readings.length === 0) {
-          valEl.textContent = '—';
-          absEl.textContent = '';
+        if (readings.length < 2) {
           chartEl.innerHTML = '<div class="chart-empty">Noch keine Daten vorhanden.</div>';
-          return;
+        } else {
+          drawLineChart(chartEl, readings, cfg.key, { color: cfg.color });
         }
-
-        const latest = readings[readings.length - 1];
-        valEl.textContent = fmtHydroVal(latest[cfg.key], cfg.decimals, cfg.unit);
-        valEl.className = 'return-value flat';
-
-        const dd = String(latest._date.getDate()).padStart(2,'0');
-        const mm = String(latest._date.getMonth()+1).padStart(2,'0');
-        const hh = String(latest._date.getHours()).padStart(2,'0');
-        const mi = String(latest._date.getMinutes()).padStart(2,'0');
-        absEl.textContent = dd + '.' + mm + ' ' + hh + ':' + mi + ' Uhr';
-
-        drawLineChart(chartEl, readings, cfg.key, { color: cfg.color });
       });
 
     } catch (err) {
-      Object.keys(stations).forEach(function(key){
-        document.getElementById(stations[key].chartId).innerHTML =
+      Object.keys(stations).forEach(function(prefix){
+        document.getElementById('meta' + prefix).textContent = 'Konnte Hydrodaten nicht laden: ' + err.message;
+        document.getElementById(stations[prefix].chartId).innerHTML =
           '<div class="chart-empty">Konnte Hydrodaten nicht laden: ' + err.message + '</div>';
       });
     }
