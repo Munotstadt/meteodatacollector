@@ -340,6 +340,75 @@
     </div>
   </div>
 
+  <div class="hydro-section-header">
+    <h2>Hydrodaten</h2>
+    <span class="stand-badge" id="hydroStandBadge">—</span>
+  </div>
+  <div class="hydro-cards" id="hydroCards">
+    <div class="hydro-card">
+      <div class="hydro-card-head">
+        <span class="hydro-card-label">Bodensee Berlingen — Pegel (m ü. M.)</span>
+        <span class="hydro-card-delta" id="deltaBodensee"></span>
+      </div>
+      <div class="range-bar-wrap">
+        <div class="range-marker-value-wrap align-center" id="markerBodensee">
+          <span class="range-marker-value" id="markerBodenseeValue">—</span>
+        </div>
+        <div class="range-marker-arrow-wrap" id="arrowBodensee">
+          <div class="range-marker-arrow"></div>
+        </div>
+        <div class="range-track" id="trackBodensee"></div>
+      </div>
+      <div class="range-labels">
+        <div class="range-label-min"><span class="range-label-value" id="minBodensee">—</span><span class="range-label-date" id="minBodenseeDate"></span></div>
+        <div class="range-label-max"><span class="range-label-value" id="maxBodensee">—</span><span class="range-label-date" id="maxBodenseeDate"></span></div>
+      </div>
+      <div class="hydro-card-meta" id="metaBodensee"></div>
+    </div>
+
+    <div class="hydro-card">
+      <div class="hydro-card-head">
+        <span class="hydro-card-label">Rhein Neuhausen — Abfluss (m³/s)</span>
+        <span class="hydro-card-delta" id="deltaRhein"></span>
+      </div>
+      <div class="range-bar-wrap">
+        <div class="range-marker-value-wrap align-center" id="markerRhein">
+          <span class="range-marker-value" id="markerRheinValue">—</span>
+        </div>
+        <div class="range-marker-arrow-wrap" id="arrowRhein">
+          <div class="range-marker-arrow"></div>
+        </div>
+        <div class="range-track" id="trackRhein"></div>
+      </div>
+      <div class="range-labels">
+        <div class="range-label-min"><span class="range-label-value" id="minRhein">—</span><span class="range-label-date" id="minRheinDate"></span></div>
+        <div class="range-label-max"><span class="range-label-value" id="maxRhein">—</span><span class="range-label-date" id="maxRheinDate"></span></div>
+      </div>
+      <div class="hydro-card-meta" id="metaRhein"></div>
+    </div>
+
+    <div class="hydro-card">
+      <div class="hydro-card-head">
+        <span class="hydro-card-label">Glatt Rheinsfelden — Abfluss (m³/s)</span>
+        <span class="hydro-card-delta" id="deltaGlatt"></span>
+      </div>
+      <div class="range-bar-wrap">
+        <div class="range-marker-value-wrap align-center" id="markerGlatt">
+          <span class="range-marker-value" id="markerGlattValue">—</span>
+        </div>
+        <div class="range-marker-arrow-wrap" id="arrowGlatt">
+          <div class="range-marker-arrow"></div>
+        </div>
+        <div class="range-track" id="trackGlatt"></div>
+      </div>
+      <div class="range-labels">
+        <div class="range-label-min"><span class="range-label-value" id="minGlatt">—</span><span class="range-label-date" id="minGlattDate"></span></div>
+        <div class="range-label-max"><span class="range-label-value" id="maxGlatt">—</span><span class="range-label-date" id="maxGlattDate"></span></div>
+      </div>
+      <div class="hydro-card-meta" id="metaGlatt"></div>
+    </div>
+  </div>
+
   <div class="range-selector" id="rangeSelector">
     <button type="button" class="range-btn" data-range="30D">30 Tage</button>
     <button type="button" class="range-btn active" data-range="90D">90 Tage</button>
@@ -410,74 +479,6 @@
     </tbody>
   </table>
 
-  <div class="hydro-section-header">
-    <h2>Hydrodaten</h2>
-    <span class="stand-badge" id="hydroStandBadge">—</span>
-  </div>
-  <div class="hydro-cards" id="hydroCards">
-    <div class="hydro-card">
-      <div class="hydro-card-head">
-        <span class="hydro-card-label">Bodensee Berlingen — Pegel (m ü. M.)</span>
-        <span class="hydro-card-delta" id="deltaBodensee"></span>
-      </div>
-      <div class="range-bar-wrap">
-        <div class="range-marker-value-wrap align-center" id="markerBodensee">
-          <span class="range-marker-value" id="markerBodenseeValue">—</span>
-        </div>
-        <div class="range-marker-arrow-wrap" id="arrowBodensee">
-          <div class="range-marker-arrow"></div>
-        </div>
-        <div class="range-track" id="trackBodensee"></div>
-      </div>
-      <div class="range-labels">
-        <div class="range-label-min"><span class="range-label-value" id="minBodensee">—</span><span class="range-label-date" id="minBodenseeDate"></span></div>
-        <div class="range-label-max"><span class="range-label-value" id="maxBodensee">—</span><span class="range-label-date" id="maxBodenseeDate"></span></div>
-      </div>
-      <div class="hydro-card-meta" id="metaBodensee"></div>
-    </div>
-
-    <div class="hydro-card">
-      <div class="hydro-card-head">
-        <span class="hydro-card-label">Rhein Neuhausen — Abfluss (m³/s)</span>
-        <span class="hydro-card-delta" id="deltaRhein"></span>
-      </div>
-      <div class="range-bar-wrap">
-        <div class="range-marker-value-wrap align-center" id="markerRhein">
-          <span class="range-marker-value" id="markerRheinValue">—</span>
-        </div>
-        <div class="range-marker-arrow-wrap" id="arrowRhein">
-          <div class="range-marker-arrow"></div>
-        </div>
-        <div class="range-track" id="trackRhein"></div>
-      </div>
-      <div class="range-labels">
-        <div class="range-label-min"><span class="range-label-value" id="minRhein">—</span><span class="range-label-date" id="minRheinDate"></span></div>
-        <div class="range-label-max"><span class="range-label-value" id="maxRhein">—</span><span class="range-label-date" id="maxRheinDate"></span></div>
-      </div>
-      <div class="hydro-card-meta" id="metaRhein"></div>
-    </div>
-
-    <div class="hydro-card">
-      <div class="hydro-card-head">
-        <span class="hydro-card-label">Glatt Rheinsfelden — Abfluss (m³/s)</span>
-        <span class="hydro-card-delta" id="deltaGlatt"></span>
-      </div>
-      <div class="range-bar-wrap">
-        <div class="range-marker-value-wrap align-center" id="markerGlatt">
-          <span class="range-marker-value" id="markerGlattValue">—</span>
-        </div>
-        <div class="range-marker-arrow-wrap" id="arrowGlatt">
-          <div class="range-marker-arrow"></div>
-        </div>
-        <div class="range-track" id="trackGlatt"></div>
-      </div>
-      <div class="range-labels">
-        <div class="range-label-min"><span class="range-label-value" id="minGlatt">—</span><span class="range-label-date" id="minGlattDate"></span></div>
-        <div class="range-label-max"><span class="range-label-value" id="maxGlatt">—</span><span class="range-label-date" id="maxGlattDate"></span></div>
-      </div>
-      <div class="hydro-card-meta" id="metaGlatt"></div>
-    </div>
-  </div>
 
   <div class="history-title">Bodensee — Pegel Berlingen (m ü. M.)</div>
   <div class="chart-wrap" id="chartBodensee"><div class="chart-empty">Loading chart…</div></div>
