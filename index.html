@@ -205,7 +205,16 @@
     border-radius: var(--radius); padding: 20px 16px 12px;
   }
   .chart-wrap svg{ display: block; width: 100%; height: auto; }
+  .chart-hit{ cursor: pointer; }
+  .chart-hit-dot{ pointer-events: none; opacity: 0; transition: opacity 0.1s ease; }
+  .chart-hit:hover + .chart-hit-dot, .chart-hit:active + .chart-hit-dot{ opacity: 1; }
   .chart-empty{ padding: 40px 10px; text-align: center; color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
+
+  .chart-readout{
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted);
+    margin: 6px 2px 0; min-height: 16px;
+  }
+  .chart-readout.active{ color: var(--text); font-weight: 600; }
 
   .footer{
     margin-top: 22px; display: flex; align-items: center; justify-content: space-between;
@@ -216,6 +225,26 @@
 
   .hydro-cards{ display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
 
+  .hydro-section-header{
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin: 40px 0 16px; padding-bottom: 14px; border-bottom: 2px solid var(--accent);
+  }
+  .hydro-section-header h2{
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; margin: 0;
+  }
+
+  .hydro-card-head{
+    display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+    margin-bottom: 26px;
+  }
+
+  .hydro-card-delta{
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; white-space: nowrap;
+  }
+  .hydro-card-delta.up{ color: var(--gain); }
+  .hydro-card-delta.down{ color: var(--loss); }
+  .hydro-card-delta.flat{ color: var(--muted); }
+
   .hydro-card{
     background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
     padding: 14px 18px 16px;
@@ -223,7 +252,7 @@
 
   .hydro-card-label{
     font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em;
-    text-transform: uppercase; color: var(--muted); margin-bottom: 26px;
+    text-transform: uppercase; color: var(--muted);
   }
 
   .range-bar-wrap{ position: relative; margin: 0 2px 10px; }
@@ -321,21 +350,27 @@
 
   <div class="history-title">Temperatur — Tagesmittel, Min/Max (°C)</div>
   <div class="chart-wrap" id="chartTemp"><div class="chart-empty">Loading chart…</div></div>
+  <div class="chart-readout" id="chartTempReadout">Tippe auf einen Punkt für Details.</div>
 
   <div class="history-title">Niederschlag — Tagessumme (mm)</div>
   <div class="chart-wrap" id="chartPrecip"><div class="chart-empty">Loading chart…</div></div>
+  <div class="chart-readout" id="chartPrecipReadout">Tippe auf einen Punkt für Details.</div>
 
   <div class="history-title">Sonnenstunden pro Tag (h)</div>
   <div class="chart-wrap" id="chartSun"><div class="chart-empty">Loading chart…</div></div>
+  <div class="chart-readout" id="chartSunReadout">Tippe auf einen Punkt für Details.</div>
 
   <div class="history-title">Globalstrahlung — Tagesmittel (W/m²)</div>
   <div class="chart-wrap" id="chartRad"><div class="chart-empty">Loading chart…</div></div>
+  <div class="chart-readout" id="chartRadReadout">Tippe auf einen Punkt für Details.</div>
 
   <div class="history-title">Wind — Tagesmittel, Böenspitze (km/h)</div>
   <div class="chart-wrap" id="chartWind"><div class="chart-empty">Loading chart…</div></div>
+  <div class="chart-readout" id="chartWindReadout">Tippe auf einen Punkt für Details.</div>
 
   <div class="history-title">Relative Luftfeuchtigkeit — Tagesmittel (%)</div>
   <div class="chart-wrap" id="chartHum"><div class="chart-empty">Loading chart…</div></div>
+  <div class="chart-readout" id="chartHumReadout">Tippe auf einen Punkt für Details.</div>
 
   <div class="history-title">Vergleich — Tagesdurchschnitte</div>
   <table id="comparisonTable">
@@ -375,28 +410,16 @@
     </tbody>
   </table>
 
-  <div class="history-title">Hydrologie — Aktuelle Messwerte (BAFU)</div>
+  <div class="hydro-section-header">
+    <h2>Hydrodaten</h2>
+    <span class="stand-badge" id="hydroStandBadge">—</span>
+  </div>
   <div class="hydro-cards" id="hydroCards">
     <div class="hydro-card">
-      <div class="hydro-card-label">Rhein Neuhausen — Abfluss (m³/s)</div>
-      <div class="range-bar-wrap">
-        <div class="range-marker-value-wrap align-center" id="markerRhein">
-          <span class="range-marker-value" id="markerRheinValue">—</span>
-        </div>
-        <div class="range-marker-arrow-wrap" id="arrowRhein">
-          <div class="range-marker-arrow"></div>
-        </div>
-        <div class="range-track" id="trackRhein"></div>
+      <div class="hydro-card-head">
+        <span class="hydro-card-label">Bodensee Berlingen — Pegel (m ü. M.)</span>
+        <span class="hydro-card-delta" id="deltaBodensee"></span>
       </div>
-      <div class="range-labels">
-        <div class="range-label-min"><span class="range-label-value" id="minRhein">—</span><span class="range-label-date" id="minRheinDate"></span></div>
-        <div class="range-label-max"><span class="range-label-value" id="maxRhein">—</span><span class="range-label-date" id="maxRheinDate"></span></div>
-      </div>
-      <div class="hydro-card-meta" id="metaRhein"></div>
-    </div>
-
-    <div class="hydro-card">
-      <div class="hydro-card-label">Bodensee Berlingen — Pegel (m ü. M.)</div>
       <div class="range-bar-wrap">
         <div class="range-marker-value-wrap align-center" id="markerBodensee">
           <span class="range-marker-value" id="markerBodenseeValue">—</span>
@@ -414,7 +437,31 @@
     </div>
 
     <div class="hydro-card">
-      <div class="hydro-card-label">Glatt Rheinsfelden — Abfluss (m³/s)</div>
+      <div class="hydro-card-head">
+        <span class="hydro-card-label">Rhein Neuhausen — Abfluss (m³/s)</span>
+        <span class="hydro-card-delta" id="deltaRhein"></span>
+      </div>
+      <div class="range-bar-wrap">
+        <div class="range-marker-value-wrap align-center" id="markerRhein">
+          <span class="range-marker-value" id="markerRheinValue">—</span>
+        </div>
+        <div class="range-marker-arrow-wrap" id="arrowRhein">
+          <div class="range-marker-arrow"></div>
+        </div>
+        <div class="range-track" id="trackRhein"></div>
+      </div>
+      <div class="range-labels">
+        <div class="range-label-min"><span class="range-label-value" id="minRhein">—</span><span class="range-label-date" id="minRheinDate"></span></div>
+        <div class="range-label-max"><span class="range-label-value" id="maxRhein">—</span><span class="range-label-date" id="maxRheinDate"></span></div>
+      </div>
+      <div class="hydro-card-meta" id="metaRhein"></div>
+    </div>
+
+    <div class="hydro-card">
+      <div class="hydro-card-head">
+        <span class="hydro-card-label">Glatt Rheinsfelden — Abfluss (m³/s)</span>
+        <span class="hydro-card-delta" id="deltaGlatt"></span>
+      </div>
       <div class="range-bar-wrap">
         <div class="range-marker-value-wrap align-center" id="markerGlatt">
           <span class="range-marker-value" id="markerGlattValue">—</span>
@@ -432,14 +479,17 @@
     </div>
   </div>
 
-  <div class="history-title">Rhein — Abfluss Neuhausen (m³/s)</div>
-  <div class="chart-wrap" id="chartRhein"><div class="chart-empty">Loading chart…</div></div>
-
   <div class="history-title">Bodensee — Pegel Berlingen (m ü. M.)</div>
   <div class="chart-wrap" id="chartBodensee"><div class="chart-empty">Loading chart…</div></div>
+  <div class="chart-readout" id="chartBodenseeReadout">Tippe auf einen Punkt für Details.</div>
+
+  <div class="history-title">Rhein — Abfluss Neuhausen (m³/s)</div>
+  <div class="chart-wrap" id="chartRhein"><div class="chart-empty">Loading chart…</div></div>
+  <div class="chart-readout" id="chartRheinReadout">Tippe auf einen Punkt für Details.</div>
 
   <div class="history-title">Glatt — Abfluss Rheinsfelden (m³/s)</div>
   <div class="chart-wrap" id="chartGlatt"><div class="chart-empty">Loading chart…</div></div>
+  <div class="chart-readout" id="chartGlattReadout">Tippe auf einen Punkt für Details.</div>
 
   <div class="footer">
     <span>Daten: MeteoSchweiz (KLO) · Source: MeteoSchweiz · Hydrodaten: Bundesamt für Umwelt BAFU (LINDAS) - Source: BAFU</span>
@@ -491,6 +541,20 @@
     else if (range === '3Y') { cutoff = new Date(now.getFullYear() - 3, now.getMonth(), now.getDate()); }
     else return days;
     return days.filter(function(d){ return d._date >= cutoff; });
+  }
+
+  function fmtPointLabel(dt, v, opts){
+    const dd = String(dt.getDate()).padStart(2,'0');
+    const mm = String(dt.getMonth()+1).padStart(2,'0');
+    let label = dd + '.' + mm + '.' + dt.getFullYear();
+    if (opts.showTime) {
+      const hh = String(dt.getHours()).padStart(2,'0');
+      const mi = String(dt.getMinutes()).padStart(2,'0');
+      label += ' ' + hh + ':' + mi;
+    }
+    const decimals = opts.decimals != null ? opts.decimals : 1;
+    const valStr = v.toLocaleString('de-CH', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    return label + ': ' + valStr + (opts.unit || '');
   }
 
   function drawLineChart(container, days, seriesKey, opts) {
@@ -579,11 +643,20 @@
 
     const bandSvg = bandPath ? '<path d="' + bandPath + '" fill="' + lineColor + '" opacity="0.10" stroke="none" />' : '';
 
+    const hitPoints = points.map(function(p){
+      const x = xScale(p.dt.getTime());
+      const y = yScale(p.v);
+      const label = fmtPointLabel(p.dt, p.v, opts);
+      return '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="10" fill="transparent" class="chart-hit" data-label="' + label + '" />' +
+             '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="2.5" fill="' + lineColor + '" class="chart-hit-dot" data-label="' + label + '" />';
+    }).join('');
+
     const svg = '<svg viewBox="0 0 ' + width + ' ' + height + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Zeitreihe">' +
         gridLines +
         (!bandPath ? ('<path d="' + areaD + '" fill="' + lineColor + '" opacity="0.08" stroke="none" />') : bandSvg) +
         '<path d="' + d.trim() + '" fill="none" stroke="' + lineColor + '" stroke-width="2" />' +
         xLabels +
+        hitPoints +
       '</svg>';
     container.innerHTML = svg;
   }
@@ -621,12 +694,15 @@
     const barW = Math.max(1, Math.min(14, (avgSpacing / xSpan) * innerW * 0.7));
 
     const baseline = yScale(0);
+    const hitW = Math.max(barW, Math.min(avgSpacing * 0.9, innerW));
     const bars = points.map(function(p){
       const x = xScale(p.dt.getTime());
       const y = yScale(p.v);
       const barTop = Math.min(y, baseline);
       const barH = Math.max(1, Math.abs(baseline - y));
-      return '<rect x="' + (x - barW / 2).toFixed(1) + '" y="' + barTop.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + barH.toFixed(1) + '" fill="' + barColor + '" opacity="0.75" />';
+      const label = fmtPointLabel(p.dt, p.v, opts);
+      return '<rect x="' + (x - hitW / 2).toFixed(1) + '" y="' + pad.top + '" width="' + hitW.toFixed(1) + '" height="' + innerH + '" fill="transparent" class="chart-hit" data-label="' + label + '" />' +
+             '<rect x="' + (x - barW / 2).toFixed(1) + '" y="' + barTop.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + barH.toFixed(1) + '" fill="' + barColor + '" opacity="0.75" data-label="' + label + '" style="pointer-events:none" />';
     }).join('');
 
     let gridLines = '';
@@ -774,13 +850,13 @@
 
       function renderCharts(){
         const filtered = filterByRange(days, currentRange);
-        drawLineChart(chartContainers.Temp, filtered, 'temp_mean_c', { bandMinKey: 'temp_min_c', bandMaxKey: 'temp_max_c', color: '#E30613' });
-        drawBarChart(chartContainers.Precip, filtered, 'precip_mm', { color: '#1F8A6E' });
-        const withSunHours = filtered.map(function(d){ return Object.assign({}, d, { sunshine_h: d.sunshine_min != null ? d.sunshine_min / 60 : null }); });
-        drawBarChart(chartContainers.Sun, withSunHours, 'sunshine_h', { color: '#C08A00' });
-        drawBarChart(chartContainers.Rad, filtered, 'radiation_wm2', { color: '#8A5CC0' });
-        drawLineChart(chartContainers.Wind, filtered, 'wind_mean_kmh', { color: '#767E8A' });
-        drawLineChart(chartContainers.Hum, filtered, 'humidity_pct', { color: '#1F6FA8' });
+        drawLineChart(chartContainers.Temp, filtered, 'temp_mean_c', { bandMinKey: 'temp_min_c', bandMaxKey: 'temp_max_c', color: '#E30613', unit: '°C', decimals: 1 });
+        drawBarChart(chartContainers.Precip, filtered, 'precip_mm', { color: '#1F8A6E', unit: ' mm', decimals: 1 });
+        const withSunHours2 = filtered.map(function(d){ return Object.assign({}, d, { sunshine_h: d.sunshine_min != null ? d.sunshine_min / 60 : null }); });
+        drawBarChart(chartContainers.Sun, withSunHours2, 'sunshine_h', { color: '#C08A00', unit: ' h', decimals: 1 });
+        drawBarChart(chartContainers.Rad, filtered, 'radiation_wm2', { color: '#8A5CC0', unit: ' W/m²', decimals: 0 });
+        drawLineChart(chartContainers.Wind, filtered, 'wind_mean_kmh', { color: '#767E8A', unit: ' km/h', decimals: 1 });
+        drawLineChart(chartContainers.Hum, filtered, 'humidity_pct', { color: '#1F6FA8', unit: ' %', decimals: 0 });
       }
 
       document.querySelectorAll('#rangeSelector .range-btn').forEach(function(btn){
@@ -837,6 +913,18 @@
     return dd + '.' + mm + '.' + date.getFullYear() + ' ' + hh + ':' + mi;
   }
 
+  // Sucht die Messung, die zeitlich am naechsten an "target" liegt (z.B.
+  // "vor 24h") - nur innerhalb von toleranceMs, sonst kein Vergleichswert.
+  function findClosestToTime(points, target, toleranceMs){
+    let best = null, bestDiff = Infinity;
+    points.forEach(function(p){
+      const diff = Math.abs(p.date.getTime() - target.getTime());
+      if (diff < bestDiff) { bestDiff = diff; best = p; }
+    });
+    if (best && bestDiff <= toleranceMs) return best;
+    return null;
+  }
+
   function renderRangeBar(prefix, readings, key, decimals, unit, color) {
     const track = document.getElementById('track' + prefix);
     const marker = document.getElementById('marker' + prefix);
@@ -847,6 +935,7 @@
     const maxValEl = document.getElementById('max' + prefix);
     const maxDateEl = document.getElementById('max' + prefix + 'Date');
     const metaEl = document.getElementById('meta' + prefix);
+    const deltaEl = document.getElementById('delta' + prefix);
 
     const points = readings
       .map(function(r){ return { v: r[key], date: r._date }; })
@@ -857,7 +946,8 @@
       minValEl.textContent = '—'; minDateEl.textContent = '';
       maxValEl.textContent = '—'; maxDateEl.textContent = '';
       metaEl.textContent = 'Noch keine Daten vorhanden.';
-      return;
+      deltaEl.textContent = '';
+      return null;
     }
 
     track.style.setProperty('--station-color', color);
@@ -890,7 +980,21 @@
     maxValEl.textContent = fmtHydroVal(maxPoint.v, decimals) + unit;
     maxDateEl.textContent = fmtHydroVal2Date(maxPoint.date);
 
+    // Delta vs. Vortag, zur aehnlichen Uhrzeit (Ziel: -24h, Toleranz 3h -
+    // passend zu Sammelabstaenden von ca. 6h).
+    const target = new Date(current.date.getTime() - 24 * 3600 * 1000);
+    const yesterday = findClosestToTime(points.slice(0, -1), target, 3 * 3600 * 1000);
+    if (yesterday) {
+      const diff = current.v - yesterday.v;
+      const dir = diff > 0.005 ? 'up' : diff < -0.005 ? 'down' : 'flat';
+      deltaEl.textContent = (diff > 0 ? '+' : '') + fmtHydroVal(diff, decimals) + unit + ' vs. Vortag';
+      deltaEl.className = 'hydro-card-delta ' + dir;
+    } else {
+      deltaEl.textContent = '';
+    }
+
     metaEl.textContent = 'Stand ' + fmtHydroDateTime(current.date) + ' Uhr · Min/Max seit Beginn der Aufzeichnung';
+    return current.date;
   }
 
   function fmtHydroVal2Date(date){
@@ -901,15 +1005,18 @@
 
   async function initHydro(){
     const stations = {
-      Rhein:     { stationId: '2288', key: 'discharge_m3s', unit: ' m³/s', decimals: 1, color: '#1F6FA8', chartId: 'chartRhein' },
       Bodensee:  { stationId: '2043', key: 'water_level_m', unit: ' m',    decimals: 2, color: '#1F8A6E', chartId: 'chartBodensee' },
+      Rhein:     { stationId: '2288', key: 'discharge_m3s', unit: ' m³/s', decimals: 1, color: '#1F6FA8', chartId: 'chartRhein' },
       Glatt:     { stationId: '2415', key: 'discharge_m3s', unit: ' m³/s', decimals: 2, color: '#8A5CC0', chartId: 'chartGlatt' }
     };
+    const headerBadge = document.getElementById('hydroStandBadge');
 
     try {
       const resp = await fetch(HYDRO_DATA_URL, { cache: 'no-store' });
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       const data = await resp.json();
+
+      let latestOverall = null;
 
       Object.keys(stations).forEach(function(prefix){
         const cfg = stations[prefix];
@@ -918,17 +1025,21 @@
           return Object.assign({}, r, { _date: parseISODateTime(r.time) });
         }) : [];
 
-        renderRangeBar(prefix, readings, cfg.key, cfg.decimals, cfg.unit, cfg.color);
+        const latestDate = renderRangeBar(prefix, readings, cfg.key, cfg.decimals, cfg.unit, cfg.color);
+        if (latestDate && (!latestOverall || latestDate > latestOverall)) latestOverall = latestDate;
 
         const chartEl = document.getElementById(cfg.chartId);
         if (readings.length < 2) {
           chartEl.innerHTML = '<div class="chart-empty">Noch keine Daten vorhanden.</div>';
         } else {
-          drawLineChart(chartEl, readings, cfg.key, { color: cfg.color });
+          drawLineChart(chartEl, readings, cfg.key, { color: cfg.color, unit: cfg.unit, decimals: cfg.decimals, showTime: true });
         }
       });
 
+      headerBadge.textContent = latestOverall ? ('Stand ' + fmtHydroDateTime(latestOverall)) : '—';
+
     } catch (err) {
+      headerBadge.textContent = '—';
       Object.keys(stations).forEach(function(prefix){
         document.getElementById('meta' + prefix).textContent = 'Konnte Hydrodaten nicht laden: ' + err.message;
         document.getElementById(stations[prefix].chartId).innerHTML =
@@ -936,6 +1047,18 @@
       });
     }
   }
+
+  document.addEventListener('click', function(e){
+    const target = e.target.closest('[data-label]');
+    if (!target) return;
+    const wrap = target.closest('.chart-wrap');
+    if (!wrap) return;
+    const readout = document.getElementById(wrap.id + 'Readout');
+    if (readout) {
+      readout.textContent = target.getAttribute('data-label');
+      readout.classList.add('active');
+    }
+  });
 
   document.getElementById('historyToggle').addEventListener('click', function(){
     const table = document.getElementById('historyTable');
