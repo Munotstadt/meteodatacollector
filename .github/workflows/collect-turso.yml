@@ -1,14 +1,16 @@
 name: Collect MeteoSwiss + BAFU data (Turso)
 
 # Unabhaengiger, paralleler Workflow zu collect.yml (Azure SQL). Schreibt
-# dieselben Quelldaten zusaetzlich in Turso (munotstadtmeteodb). Beide
-# Pfade laufen komplett getrennt voneinander - ein Fehler hier wirkt sich
-# nicht auf den Azure-Pfad aus und umgekehrt.
+# dieselben Quelldaten zusaetzlich nach Turso (munotstadtmeteodb).
+# Beide Pfade (Meteo + Hydro) laufen im selben Rhythmus alle 2 Stunden.
 
 on:
   schedule:
-    - cron: "0 2,8,14,20 * * *"
+    - cron: "0 */2 * * *"   # alle 2 Stunden
   workflow_dispatch: {}
+
+permissions:
+  contents: write
 
 jobs:
   collect-turso:
@@ -37,3 +39,19 @@ jobs:
           TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
         run: python collector/collect_hydro_turso.py
         continue-on-error: true
+
+      - name: Log run
+        run: python collector/log_run.py
+
+      - name: Commit and push log if changed
+        run: |
+          git config user.name "meteodatacollector-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git pull --rebase origin main
+          git add logs/turso-run-log.md
+          if git diff --cached --quiet; then
+            echo "Keine Aenderungen."
+          else
+            git commit -m "Turso run log: Collect MeteoSwiss + BAFU data (Turso) #${{ github.run_number }}"
+            git push
+          fi
