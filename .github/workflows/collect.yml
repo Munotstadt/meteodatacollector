@@ -1,13 +1,14 @@
-name: Collect MeteoSwiss + BAFU data
+name: Collect MeteoSwiss + BAFU data (Azure)
+
+# Schreibt ausschliesslich in Azure SQL Database (Archiv). Committet keine
+# Frontend-Dateien mehr ins Repo - das uebernimmt seit der Umstellung auf
+# Turso als Frontend-Quelle der Workflow collect-turso.yml.
 
 on:
   schedule:
     # Fixed UTC times, 4x/day: 02:00 / 08:00 / 14:00 / 20:00 UTC.
     - cron: "0 2,8,14,20 * * *"
   workflow_dispatch: {}
-
-permissions:
-  contents: write
 
 jobs:
   collect:
@@ -24,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: pip install pymssql
 
-      - name: Run MeteoSwiss collector (KLO)
+      - name: Run MeteoSwiss collector (KLO) -> Azure SQL
         env:
           AZURE_SQL_SERVER: ${{ secrets.AZURE_SQL_SERVER }}
           AZURE_SQL_DATABASE: ${{ secrets.AZURE_SQL_DATABASE }}
@@ -32,7 +33,7 @@ jobs:
           AZURE_SQL_PASSWORD: ${{ secrets.AZURE_SQL_PASSWORD }}
         run: python collector/collect.py
 
-      - name: Run BAFU hydro collector (Rhein/Bodensee/Glatt)
+      - name: Run BAFU hydro collector (Rhein/Bodensee/Glatt) -> Azure SQL
         env:
           AZURE_SQL_SERVER: ${{ secrets.AZURE_SQL_SERVER }}
           AZURE_SQL_DATABASE: ${{ secrets.AZURE_SQL_DATABASE }}
@@ -42,15 +43,3 @@ jobs:
         # Nicht abbrechen, falls LINDAS mal nicht erreichbar ist - der
         # Meteo-Teil oben hat trotzdem schon erfolgreich geschrieben.
         continue-on-error: true
-
-      - name: Commit and push if changed
-        run: |
-          git config user.name "meteodatacollector-bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add data/klo_daily.json data/hydro_latest.json
-          if git diff --cached --quiet; then
-            echo "Keine Aenderungen."
-          else
-            git commit -m "Update Daten $(date -u +%Y-%m-%d)"
-            git push
-          fi
