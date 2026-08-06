@@ -195,9 +195,29 @@ def export_json(conn) -> int:
     return len(days)
 
 
+def table_row_count(conn) -> int:
+    result = conn.execute("SELECT COUNT(*) FROM klo_daily").fetchone()
+    return result[0] if result else 0
+
+
 def main() -> None:
+    conn = get_connection()
+    ensure_schema(conn)
+
+    existing_count = table_row_count(conn)
+    # Die historische CSV (33'000+ Tage) nur laden, wenn die Tabelle noch
+    # (fast) leer ist - z.B. beim allerersten Lauf. Danach reicht die
+    # "recent"-CSV (~200 Tage), die auch nachtraegliche Korrekturen von
+    # MeteoSchweiz abdeckt. Das spart bei jedem der vielen taeglichen
+    # Laeufe zehntausende unnoetige Schreibvorgaenge gegen Turso.
+    urls = (HISTORICAL_URL, RECENT_URL) if existing_count < 100 else (RECENT_URL,)
+    if existing_count < 100:
+        print(f"Tabelle hat erst {existing_count} Zeilen - lade volle Historie.")
+    else:
+        print(f"Tabelle hat bereits {existing_count} Zeilen - lade nur 'recent' (~200 Tage).")
+
     all_new: dict[str, dict] = {}
-    for url in (HISTORICAL_URL, RECENT_URL):
+    for url in urls:
         try:
             raw_rows = fetch_csv(url)
         except Exception as exc:  # noqa: BLE001
@@ -211,8 +231,6 @@ def main() -> None:
         print("Keine neuen Daten erhalten, breche ab ohne Aenderungen.", file=sys.stderr)
         sys.exit(1)
 
-    conn = get_connection()
-    ensure_schema(conn)
     written = upsert_rows(conn, all_new)
     exported = export_json(conn)
 
