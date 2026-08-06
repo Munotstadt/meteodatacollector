@@ -1,6 +1,6 @@
 {
   "source": "Bundesamt für Umwelt BAFU, LINDAS Linked Data Service - Source: BAFU",
-  "generated_at": "2026-08-05T21:09:03+00:00",
+  "generated_at": "2026-08-06T04:49:04+00:00",
   "stations": {
     "2288": {
       "name": "Rhein – Neuhausen",
@@ -119,6 +119,30 @@
           "discharge_m3s": 157.66,
           "water_level_m": 382.454,
           "water_temp_c": 27.1
+        },
+        {
+          "time": "2026-08-06T04:30:00+01:00",
+          "discharge_m3s": 153.93,
+          "water_level_m": 382.432,
+          "water_temp_c": 23.08
+        },
+        {
+          "time": "2026-08-06T05:00:00+01:00",
+          "discharge_m3s": 153.595,
+          "water_level_m": 382.43,
+          "water_temp_c": 22.87
+        },
+        {
+          "time": "2026-08-06T05:20:00+01:00",
+          "discharge_m3s": 153.099,
+          "water_level_m": 382.427,
+          "water_temp_c": 22.71
+        },
+        {
+          "time": "2026-08-06T05:30:00+01:00",
+          "discharge_m3s": 152.768,
+          "water_level_m": 382.425,
+          "water_temp_c": 22.69
         }
       ]
     },
@@ -238,6 +262,30 @@
           "time": "2026-08-05T21:50:00",
           "discharge_m3s": null,
           "water_level_m": 394.44,
+          "water_temp_c": null
+        },
+        {
+          "time": "2026-08-06T04:30:00+01:00",
+          "discharge_m3s": null,
+          "water_level_m": 394.448,
+          "water_temp_c": null
+        },
+        {
+          "time": "2026-08-06T05:00:00+01:00",
+          "discharge_m3s": null,
+          "water_level_m": 394.448,
+          "water_temp_c": null
+        },
+        {
+          "time": "2026-08-06T05:20:00+01:00",
+          "discharge_m3s": null,
+          "water_level_m": 394.447,
+          "water_temp_c": null
+        },
+        {
+          "time": "2026-08-06T05:30:00+01:00",
+          "discharge_m3s": null,
+          "water_level_m": 394.447,
           "water_temp_c": null
         }
       ]
@@ -359,6 +407,30 @@
           "discharge_m3s": 1.88,
           "water_level_m": 335.411,
           "water_temp_c": 23.5
+        },
+        {
+          "time": "2026-08-06T04:30:00+01:00",
+          "discharge_m3s": 1.822,
+          "water_level_m": 335.408,
+          "water_temp_c": 22.0
+        },
+        {
+          "time": "2026-08-06T05:00:00+01:00",
+          "discharge_m3s": 1.781,
+          "water_level_m": 335.406,
+          "water_temp_c": 21.85
+        },
+        {
+          "time": "2026-08-06T05:20:00+01:00",
+          "discharge_m3s": 1.781,
+          "water_level_m": 335.406,
+          "water_temp_c": 21.75
+        },
+        {
+          "time": "2026-08-06T05:30:00+01:00",
+          "discharge_m3s": 1.781,
+          "water_level_m": 335.406,
+          "water_temp_c": 21.7
         }
       ]
     }
