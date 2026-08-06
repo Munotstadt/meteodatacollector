@@ -20,6 +20,7 @@ import io
 import json
 import os
 import sys
+import time
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
@@ -107,10 +108,29 @@ def to_float(raw: str) -> float | None:
         return None
 
 
-def get_connection():
+def get_connection(max_attempts: int = 5):
     url = os.environ["TURSO_DATABASE_URL"]
     token = os.environ["TURSO_AUTH_TOKEN"]
-    return libsql.connect(database=url, auth_token=token)
+
+    delays = [3, 6, 12, 20, 30][: max_attempts - 1]
+    last_error: Exception | None = None
+    for attempt in range(1, max_attempts + 1):
+        try:
+            conn = libsql.connect(database=url, auth_token=token)
+            conn.execute("SELECT 1")
+            return conn
+        except Exception as exc:  # noqa: BLE001 - libsql wirft breite ValueErrors
+            last_error = exc
+            if attempt == max_attempts:
+                break
+            wait = delays[attempt - 1]
+            print(
+                f"WARNUNG: Turso-Verbindung fehlgeschlagen (Versuch {attempt}/{max_attempts}): {exc}\n"
+                f"  -> warte {wait}s und versuche erneut.",
+                file=sys.stderr,
+            )
+            time.sleep(wait)
+    raise last_error  # noqa: RSE102
 
 
 def ensure_schema(conn) -> None:
