@@ -17,11 +17,13 @@ from __future__ import annotations
 
 import csv
 import io
+import json
 import os
 import sys
 import urllib.parse
 import urllib.request
-from datetime import datetime
+from datetime import datetime, timezone
+from pathlib import Path
 
 import libsql
 
@@ -32,6 +34,11 @@ STATIONS = {
     "2043": {"name": "Bodensee – Berlingen", "kind": "lake"},
     "2415": {"name": "Glatt – Rheinsfelden", "kind": "river"},
 }
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = REPO_ROOT / "data"
+JSON_PATH = DATA_DIR / "hydro_latest.json"
+JSON_WINDOW_DAYS = 90
 
 SPARQL_QUERY = """
 PREFIX schema: <http://schema.org/>
@@ -150,6 +157,49 @@ def upsert_readings(conn, rows: list[dict]) -> int:
     return written
 
 
+def export_json(conn) -> int:
+    """Liest hydro_readings aus Turso zurueck (letzte JSON_WINDOW_DAYS Tage)
+    und schreibt data/hydro_latest.json - dieselbe Form, die index.html
+    bisher von Azure bekam. Turso ist damit die Quelle fuers Frontend.
+    """
+    result = conn.execute(
+        """
+        SELECT station_id, reading_time, discharge_m3s, water_level_m, water_temp_c
+        FROM hydro_readings
+        WHERE reading_time >= datetime('now', ?)
+        ORDER BY station_id, reading_time
+        """,
+        (f"-{JSON_WINDOW_DAYS} days",),
+    ).fetchall()
+
+    stations_out: dict[str, dict] = {}
+    for sid, meta in STATIONS.items():
+        stations_out[sid] = {"name": meta["name"], "kind": meta["kind"], "readings": []}
+
+    total = 0
+    for row in result:
+        sid, reading_time, discharge, water_level, water_temp = row
+        if sid not in stations_out:
+            continue
+        stations_out[sid]["readings"].append({
+            "time": reading_time,
+            "discharge_m3s": discharge,
+            "water_level_m": water_level,
+            "water_temp_c": water_temp,
+        })
+        total += 1
+
+    payload = {
+        "source": "Bundesamt für Umwelt BAFU, LINDAS Linked Data Service - Source: BAFU",
+        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "stations": stations_out,
+    }
+
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    JSON_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    return total
+
+
 def main() -> None:
     try:
         rows = fetch_lindas()
@@ -164,8 +214,10 @@ def main() -> None:
     conn = get_connection()
     ensure_schema(conn)
     written = upsert_readings(conn, rows)
+    exported = export_json(conn)
 
     print(f"Fertig. {written} Messwerte in Turso (munotstadtmeteodb) geschrieben/aktualisiert.")
+    print(f"Export: {exported} Datenpunkte nach {JSON_PATH} geschrieben.")
 
 
 if __name__ == "__main__":
