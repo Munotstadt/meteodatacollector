@@ -125,13 +125,16 @@
   }
   .error{ color: var(--loss); }
 
-  .detail-header{ padding-bottom: 18px; border-bottom: 2px solid var(--accent); }
+  .detail-header{
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding-bottom: 18px; border-bottom: 2px solid var(--accent);
+  }
 
   .detail-header h2{
     font-family: 'Space Grotesk', sans-serif;
     font-weight: 700;
-    font-size: 24px;
-    margin: 0 0 4px;
+    font-size: 20px;
+    margin: 0;
   }
 
   .stand-badge{
@@ -205,9 +208,11 @@
     border-radius: var(--radius); padding: 20px 16px 12px;
   }
   .chart-wrap svg{ display: block; width: 100%; height: auto; }
-  .chart-hit{ cursor: pointer; }
-  .chart-hit-dot{ pointer-events: none; opacity: 0; transition: opacity 0.1s ease; }
-  .chart-hit:hover + .chart-hit-dot, .chart-hit:active + .chart-hit-dot{ opacity: 1; }
+  .chart-hit-area{ cursor: pointer; touch-action: pan-y; }
+  .chart-tooltip-g .tooltip-bg{ opacity: 0.95; }
+  .chart-tooltip-g .tooltip-line{ pointer-events: none; }
+  .chart-tooltip-g .tooltip-dot{ pointer-events: none; }
+  .chart-tooltip-g .tooltip-text{ pointer-events: none; }
   .chart-empty{ padding: 40px 10px; text-align: center; color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
 
   .chart-readout{
@@ -325,19 +330,20 @@
   </div>
 
   <div class="detail-header">
-    <h2>Zürich-Kloten <span class="stand-badge" id="standBadge"></span></h2>
+    <h2>Zürich-Kloten</h2>
+    <span class="stand-badge" id="standBadge">—</span>
+  </div>
 
-    <div class="detail-returns" id="detailReturns">
-      <div class="return-box"><span class="return-label">Temp. Mittel</span><span class="return-value" id="valTempMean">—</span><span class="return-abs" id="valTempMeanAbs"></span></div>
-      <div class="return-box"><span class="return-label">Temp. Min</span><span class="return-value" id="valTempMin">—</span><span class="return-abs" id="valTempMinAbs"></span></div>
-      <div class="return-box"><span class="return-label">Temp. Max</span><span class="return-value" id="valTempMax">—</span><span class="return-abs" id="valTempMaxAbs"></span></div>
-      <div class="return-box"><span class="return-label">Niederschlag</span><span class="return-value" id="valPrecip">—</span><span class="return-abs" id="valPrecipAbs"></span></div>
-      <div class="return-box"><span class="return-label">Sonnenstunden</span><span class="return-value" id="valSun">—</span><span class="return-abs" id="valSunAbs"></span></div>
-      <div class="return-box"><span class="return-label">Globalstrahlung</span><span class="return-value" id="valRad">—</span><span class="return-abs" id="valRadAbs"></span></div>
-      <div class="return-box"><span class="return-label">Wind Mittel</span><span class="return-value" id="valWind">—</span><span class="return-abs" id="valWindAbs"></span></div>
-      <div class="return-box"><span class="return-label">Böenspitze</span><span class="return-value" id="valWindMax">—</span><span class="return-abs" id="valWindMaxAbs"></span></div>
-      <div class="return-box"><span class="return-label">Luftfeuchtigkeit</span><span class="return-value" id="valHum">—</span><span class="return-abs" id="valHumAbs"></span></div>
-    </div>
+  <div class="detail-returns" id="detailReturns">
+    <div class="return-box"><span class="return-label">Temp. Mittel</span><span class="return-value" id="valTempMean">—</span><span class="return-abs" id="valTempMeanAbs"></span></div>
+    <div class="return-box"><span class="return-label">Temp. Min</span><span class="return-value" id="valTempMin">—</span><span class="return-abs" id="valTempMinAbs"></span></div>
+    <div class="return-box"><span class="return-label">Temp. Max</span><span class="return-value" id="valTempMax">—</span><span class="return-abs" id="valTempMaxAbs"></span></div>
+    <div class="return-box"><span class="return-label">Niederschlag</span><span class="return-value" id="valPrecip">—</span><span class="return-abs" id="valPrecipAbs"></span></div>
+    <div class="return-box"><span class="return-label">Sonnenstunden</span><span class="return-value" id="valSun">—</span><span class="return-abs" id="valSunAbs"></span></div>
+    <div class="return-box"><span class="return-label">Globalstrahlung</span><span class="return-value" id="valRad">—</span><span class="return-abs" id="valRadAbs"></span></div>
+    <div class="return-box"><span class="return-label">Wind Mittel</span><span class="return-value" id="valWind">—</span><span class="return-abs" id="valWindAbs"></span></div>
+    <div class="return-box"><span class="return-label">Böenspitze</span><span class="return-value" id="valWindMax">—</span><span class="return-abs" id="valWindMaxAbs"></span></div>
+    <div class="return-box"><span class="return-label">Luftfeuchtigkeit</span><span class="return-value" id="valHum">—</span><span class="return-abs" id="valHumAbs"></span></div>
   </div>
 
   <div class="hydro-section-header">
@@ -558,6 +564,107 @@
     return label + ': ' + valStr + (opts.unit || '');
   }
 
+  // ---------------- Chart-Interaktion (Hover/Tap zeigt den Wert) ----------------
+  // Ein Registry-Eintrag pro Chart-Container mit den echten Datenpunkt-
+  // Positionen im SVG-Koordinatenraum. Ein einziges grosses Hit-Rechteck
+  // pro Chart sucht bei Zeigerbewegung/Tap per naechstem-Nachbarn (auf der
+  // x-Achse) den tatsaechlich gemeinten Punkt - robust, auch wenn Punkte
+  // auf dem Bildschirm nur wenige Pixel auseinanderliegen.
+
+  const chartRegistry = {};
+
+  function registerChart(container, points, pad, innerH){
+    if (!container.id) return;
+    chartRegistry[container.id] = { points: points, pad: pad, innerH: innerH };
+  }
+
+  function buildTooltipGroup(color){
+    return '<g class="chart-tooltip-g" style="display:none">' +
+      '<line class="tooltip-line" stroke="#767E8A" stroke-width="1" stroke-dasharray="3,3" />' +
+      '<circle class="tooltip-dot" r="4" fill="' + color + '" stroke="#fff" stroke-width="1.5" />' +
+      '<rect class="tooltip-bg" rx="3" fill="#1A1D22" />' +
+      '<text class="tooltip-text" fill="#fff" font-family="IBM Plex Mono, monospace" font-size="11" font-weight="600" text-anchor="middle"></text>' +
+    '</g>';
+  }
+
+  function findNearestPoint(points, svgX){
+    let nearest = points[0], minDist = Math.abs(points[0].x - svgX);
+    for (let i = 1; i < points.length; i++) {
+      const dist = Math.abs(points[i].x - svgX);
+      if (dist < minDist) { minDist = dist; nearest = points[i]; }
+    }
+    return nearest;
+  }
+
+  function svgCoordsFromEvent(svg, clientX){
+    const rect = svg.getBoundingClientRect();
+    const vb = svg.viewBox.baseVal;
+    const ratio = vb.width / rect.width;
+    return vb.x + (clientX - rect.left) * ratio;
+  }
+
+  function showTooltip(svg, entry, point){
+    const g = svg.querySelector('.chart-tooltip-g');
+    if (!g) return;
+    const line = g.querySelector('.tooltip-line');
+    const dot = g.querySelector('.tooltip-dot');
+    const bg = g.querySelector('.tooltip-bg');
+    const text = g.querySelector('.tooltip-text');
+
+    const pointY = point.y != null ? point.y : (entry.pad.top + entry.innerH);
+    line.setAttribute('x1', point.x); line.setAttribute('x2', point.x);
+    line.setAttribute('y1', entry.pad.top); line.setAttribute('y2', entry.pad.top + entry.innerH);
+    dot.setAttribute('cx', point.x); dot.setAttribute('cy', pointY);
+
+    text.textContent = point.label;
+    const textWidth = point.label.length * 6.2 + 16;
+    let boxX = point.x - textWidth / 2;
+    boxX = Math.max(2, Math.min(798 - textWidth, boxX));
+    const boxY = Math.max(2, pointY - 28);
+    bg.setAttribute('x', boxX); bg.setAttribute('y', boxY);
+    bg.setAttribute('width', textWidth); bg.setAttribute('height', 20);
+    text.setAttribute('x', boxX + textWidth / 2); text.setAttribute('y', boxY + 14);
+
+    g.style.display = 'block';
+  }
+
+  function hideTooltip(svg){
+    const g = svg.querySelector('.chart-tooltip-g');
+    if (g) g.style.display = 'none';
+  }
+
+  function handlePointerAt(svg, clientX){
+    const container = svg.closest('.chart-wrap');
+    if (!container || !container.id) return;
+    const entry = chartRegistry[container.id];
+    if (!entry || !entry.points.length) return;
+
+    const svgX = svgCoordsFromEvent(svg, clientX);
+    const point = findNearestPoint(entry.points, svgX);
+    showTooltip(svg, entry, point);
+
+    const readout = document.getElementById(container.id + 'Readout');
+    if (readout) {
+      readout.textContent = point.label;
+      readout.classList.add('active');
+    }
+  }
+
+  document.addEventListener('pointermove', function(e){
+    const svg = e.target.closest('.chart-svg');
+    if (!svg) return;
+    handlePointerAt(svg, e.clientX);
+  });
+  document.addEventListener('pointerdown', function(e){
+    const svg = e.target.closest('.chart-svg');
+    if (!svg) return;
+    handlePointerAt(svg, e.clientX);
+  });
+  document.addEventListener('pointerleave', function(e){
+    const svg = e.target.closest('.chart-svg');
+    if (svg) hideTooltip(svg);
+  }, true);
+
   function drawLineChart(container, days, seriesKey, opts) {
     opts = opts || {};
     const width = 800, height = 220, pad = { top: 14, right: 14, bottom: 26, left: 46 };
@@ -644,22 +751,24 @@
 
     const bandSvg = bandPath ? '<path d="' + bandPath + '" fill="' + lineColor + '" opacity="0.10" stroke="none" />' : '';
 
-    const hitPoints = points.map(function(p){
-      const x = xScale(p.dt.getTime());
-      const y = yScale(p.v);
-      const label = fmtPointLabel(p.dt, p.v, opts);
-      return '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="10" fill="transparent" class="chart-hit" data-label="' + label + '" />' +
-             '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="2.5" fill="' + lineColor + '" class="chart-hit-dot" data-label="' + label + '" />';
-    }).join('');
+    // Registrierung fuer die Zeigerinteraktion: ein Punkt pro Datenwert,
+    // mit exakter x/y-Position im SVG-Koordinatenraum. Ein einziges,
+    // grosszuegiges Hit-Rechteck (statt vieler kleiner, sich ueberlappender
+    // Kreise) findet danach per naechstem-Nachbarn den richtigen Punkt.
+    const registryPoints = points.map(function(p){
+      return { x: xScale(p.dt.getTime()), y: yScale(p.v), label: fmtPointLabel(p.dt, p.v, opts) };
+    });
 
-    const svg = '<svg viewBox="0 0 ' + width + ' ' + height + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Zeitreihe">' +
+    const svg = '<svg viewBox="0 0 ' + width + ' ' + height + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Zeitreihe" class="chart-svg">' +
         gridLines +
         (!bandPath ? ('<path d="' + areaD + '" fill="' + lineColor + '" opacity="0.08" stroke="none" />') : bandSvg) +
         '<path d="' + d.trim() + '" fill="none" stroke="' + lineColor + '" stroke-width="2" />' +
         xLabels +
-        hitPoints +
+        buildTooltipGroup(lineColor) +
+        '<rect x="0" y="0" width="' + width + '" height="' + height + '" fill="transparent" class="chart-hit-area" />' +
       '</svg>';
     container.innerHTML = svg;
+    registerChart(container, registryPoints, pad, innerH);
   }
 
   function drawBarChart(container, days, seriesKey, opts) {
@@ -695,15 +804,12 @@
     const barW = Math.max(1, Math.min(14, (avgSpacing / xSpan) * innerW * 0.7));
 
     const baseline = yScale(0);
-    const hitW = Math.max(barW, Math.min(avgSpacing * 0.9, innerW));
     const bars = points.map(function(p){
       const x = xScale(p.dt.getTime());
       const y = yScale(p.v);
       const barTop = Math.min(y, baseline);
       const barH = Math.max(1, Math.abs(baseline - y));
-      const label = fmtPointLabel(p.dt, p.v, opts);
-      return '<rect x="' + (x - hitW / 2).toFixed(1) + '" y="' + pad.top + '" width="' + hitW.toFixed(1) + '" height="' + innerH + '" fill="transparent" class="chart-hit" data-label="' + label + '" />' +
-             '<rect x="' + (x - barW / 2).toFixed(1) + '" y="' + barTop.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + barH.toFixed(1) + '" fill="' + barColor + '" opacity="0.75" data-label="' + label + '" style="pointer-events:none" />';
+      return '<rect x="' + (x - barW / 2).toFixed(1) + '" y="' + barTop.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + barH.toFixed(1) + '" fill="' + barColor + '" opacity="0.75" style="pointer-events:none" />';
     }).join('');
 
     let gridLines = '';
@@ -724,10 +830,17 @@
       return '<text x="' + x.toFixed(1) + '" y="' + (height - 8) + '" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="#767E8A">' + label + '</text>';
     }).join('');
 
-    const svg = '<svg viewBox="0 0 ' + width + ' ' + height + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Zeitreihe">' +
+    const registryPoints = points.map(function(p){
+      return { x: xScale(p.dt.getTime()), y: yScale(p.v), label: fmtPointLabel(p.dt, p.v, opts) };
+    });
+
+    const svg = '<svg viewBox="0 0 ' + width + ' ' + height + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Zeitreihe" class="chart-svg">' +
         gridLines + bars + xLabels +
+        buildTooltipGroup(barColor) +
+        '<rect x="0" y="0" width="' + width + '" height="' + height + '" fill="transparent" class="chart-hit-area" />' +
       '</svg>';
     container.innerHTML = svg;
+    registerChart(container, registryPoints, pad, innerH);
   }
 
   function addDays(date, n){
@@ -1048,18 +1161,6 @@
       });
     }
   }
-
-  document.addEventListener('click', function(e){
-    const target = e.target.closest('[data-label]');
-    if (!target) return;
-    const wrap = target.closest('.chart-wrap');
-    if (!wrap) return;
-    const readout = document.getElementById(wrap.id + 'Readout');
-    if (readout) {
-      readout.textContent = target.getAttribute('data-label');
-      readout.classList.add('active');
-    }
-  });
 
   document.getElementById('historyToggle').addEventListener('click', function(){
     const table = document.getElementById('historyTable');
