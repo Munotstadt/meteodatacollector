@@ -1,0 +1,39 @@
+name: Collect MeteoSwiss + BAFU data (Turso)
+
+# Unabhaengiger, paralleler Workflow zu collect.yml (Azure SQL). Schreibt
+# dieselben Quelldaten zusaetzlich in Turso (munotstadtmeteodb). Beide
+# Pfade laufen komplett getrennt voneinander - ein Fehler hier wirkt sich
+# nicht auf den Azure-Pfad aus und umgekehrt.
+
+on:
+  schedule:
+    - cron: "0 2,8,14,20 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  collect-turso:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install libsql
+
+      - name: Run MeteoSwiss collector (KLO) -> Turso
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+        run: python collector/collect_turso.py
+
+      - name: Run BAFU hydro collector -> Turso
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+        run: python collector/collect_hydro_turso.py
+        continue-on-error: true
