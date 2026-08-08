@@ -112,33 +112,68 @@ def normalize_rows(raw_rows: list[dict]) -> dict[str, dict]:
     return out
 
 
-def get_connection(max_attempts: int = 5):
-    url = os.environ["TURSO_DATABASE_URL"]
-    token = os.environ["TURSO_AUTH_TOKEN"]
+class ResilientConnection:
+    """Wrapper um eine Turso-Verbindung, der bei einem Verbindungs- oder
+    Stream-Fehler (z.B. "stream not found" nach laengerer offener
+    Verbindung, oder ein kurzer Netzwerk-Aussetzer) automatisch neu
+    verbindet und die Abfrage erneut versucht - statt den ganzen Lauf
+    abbrechen zu lassen. Reconnects passieren transparent bei jedem
+    execute()-Aufruf, nicht nur beim ersten Verbindungsaufbau.
+    """
 
-    # Turso/Hrana kann gelegentlich mit einem transienten Verbindungsfehler
-    # abbrechen (z.B. "unexpected EOF during chunk size line"). Verbindung
-    # direkt mit einer Testabfrage pruefen und bei Bedarf mit Backoff
-    # erneut versuchen, statt den ganzen Lauf abbrechen zu lassen.
-    delays = [3, 6, 12, 20, 30][: max_attempts - 1]
-    last_error: Exception | None = None
-    for attempt in range(1, max_attempts + 1):
-        try:
-            conn = libsql.connect(database=url, auth_token=token)
-            conn.execute("SELECT 1")
-            return conn
-        except Exception as exc:  # noqa: BLE001 - libsql wirft breite ValueErrors
-            last_error = exc
-            if attempt == max_attempts:
-                break
-            wait = delays[attempt - 1]
-            print(
-                f"WARNUNG: Turso-Verbindung fehlgeschlagen (Versuch {attempt}/{max_attempts}): {exc}\n"
-                f"  -> warte {wait}s und versuche erneut.",
-                file=sys.stderr,
-            )
-            time.sleep(wait)
-    raise last_error  # noqa: RSE102
+    def __init__(self, max_query_attempts: int = 4):
+        self.max_query_attempts = max_query_attempts
+        self._conn = self._connect()
+
+    def _connect(self, max_attempts: int = 5):
+        url = os.environ["TURSO_DATABASE_URL"]
+        token = os.environ["TURSO_AUTH_TOKEN"]
+        delays = [3, 6, 12, 20, 30][: max_attempts - 1]
+        last_error: Exception | None = None
+        for attempt in range(1, max_attempts + 1):
+            try:
+                conn = libsql.connect(database=url, auth_token=token)
+                conn.execute("SELECT 1")
+                return conn
+            except Exception as exc:  # noqa: BLE001 - libsql wirft breite ValueErrors
+                last_error = exc
+                if attempt == max_attempts:
+                    break
+                wait = delays[attempt - 1]
+                print(
+                    f"WARNUNG: Turso-Verbindung fehlgeschlagen (Versuch {attempt}/{max_attempts}): {exc}\n"
+                    f"  -> warte {wait}s und versuche erneut.",
+                    file=sys.stderr,
+                )
+                time.sleep(wait)
+        raise last_error  # noqa: RSE102
+
+    def execute(self, sql, params=None):
+        delays = [3, 6, 12]
+        last_error: Exception | None = None
+        for attempt in range(1, self.max_query_attempts + 1):
+            try:
+                return self._conn.execute(sql, params) if params is not None else self._conn.execute(sql)
+            except Exception as exc:  # noqa: BLE001
+                last_error = exc
+                if attempt == self.max_query_attempts:
+                    break
+                wait = delays[min(attempt - 1, len(delays) - 1)]
+                print(
+                    f"WARNUNG: Turso-Abfrage fehlgeschlagen (Versuch {attempt}/{self.max_query_attempts}): {exc}\n"
+                    f"  -> baue neue Verbindung auf, warte {wait}s.",
+                    file=sys.stderr,
+                )
+                time.sleep(wait)
+                self._conn = self._connect()
+        raise last_error  # noqa: RSE102
+
+    def commit(self):
+        self._conn.commit()
+
+
+def get_connection() -> ResilientConnection:
+    return ResilientConnection()
 
 
 def ensure_schema(conn) -> None:
@@ -188,15 +223,27 @@ def upsert_rows(conn, rows: dict[str, dict], batch_size: int = 200) -> int:
     return written
 
 
+JSON_WINDOW_YEARS = 20
+
+
 def export_json(conn) -> int:
-    """Liest klo_daily komplett aus Turso zurueck und schreibt data/klo_daily.json.
+    """Liest die letzten JSON_WINDOW_YEARS Jahre aus klo_daily und schreibt
+    data/klo_daily.json.
 
     Turso ist damit ab jetzt die Quelle fuers Frontend (GitHub Pages liest
     diese Datei statisch) - entkoppelt von Azure, das weiterhin unabhaengig
-    sein eigenes Archiv pflegt.
+    sein eigenes Archiv pflegt. Die vollstaendige Historie bleibt in Turso
+    selbst erhalten; nur der Website-Export ist begrenzt, damit die Datei
+    nicht bei jedem Seitenaufruf unnoetig gross ist.
     """
     col_list = ", ".join(["obs_date", *COLUMNS])
-    result = conn.execute(f"SELECT {col_list} FROM klo_daily ORDER BY obs_date").fetchall()
+    result = conn.execute(
+        f"""
+        SELECT {col_list} FROM klo_daily
+        WHERE obs_date >= date('now', '-{JSON_WINDOW_YEARS} years')
+        ORDER BY obs_date
+        """
+    ).fetchall()
 
     days = []
     for row in result:
@@ -219,37 +266,25 @@ def export_json(conn) -> int:
     return len(days)
 
 
-def table_row_count(conn) -> int:
-    result = conn.execute("SELECT COUNT(*) FROM klo_daily").fetchone()
-    return result[0] if result else 0
-
-
 def main() -> None:
     conn = get_connection()
     ensure_schema(conn)
 
-    existing_count = table_row_count(conn)
-    # Die historische CSV (33'000+ Tage) nur laden, wenn die Tabelle noch
-    # (fast) leer ist - z.B. beim allerersten Lauf. Danach reicht die
-    # "recent"-CSV (~200 Tage), die auch nachtraegliche Korrekturen von
-    # MeteoSchweiz abdeckt. Das spart bei jedem der vielen taeglichen
-    # Laeufe zehntausende unnoetige Schreibvorgaenge gegen Turso.
-    urls = (HISTORICAL_URL, RECENT_URL) if existing_count < 100 else (RECENT_URL,)
-    if existing_count < 100:
-        print(f"Tabelle hat erst {existing_count} Zeilen - lade volle Historie.")
-    else:
-        print(f"Tabelle hat bereits {existing_count} Zeilen - lade nur 'recent' (~200 Tage).")
-
+    # Die volle Historie wurde einmalig komplett geladen (33'000+ Tage).
+    # Ab jetzt reicht MeteoSchweiz' "recent"-CSV (~200-220 Tage) - das ist
+    # praktisch der "current load": deckt den laufenden Tag plus
+    # nachtraegliche Korrekturen der letzten Wochen/Monate ab, ohne bei
+    # jedem der vielen taeglichen Laeufe die komplette Historie erneut zu
+    # lesen und zu schreiben.
     all_new: dict[str, dict] = {}
-    for url in urls:
-        try:
-            raw_rows = fetch_csv(url)
-        except Exception as exc:  # noqa: BLE001
-            print(f"FEHLER beim Laden von {url}: {exc}", file=sys.stderr)
-            continue
-        normalized = normalize_rows(raw_rows)
-        print(f"{url}: {len(normalized)} Tage gelesen")
-        all_new.update(normalized)
+    try:
+        raw_rows = fetch_csv(RECENT_URL)
+    except Exception as exc:  # noqa: BLE001
+        print(f"FEHLER beim Laden von {RECENT_URL}: {exc}", file=sys.stderr)
+        sys.exit(1)
+    normalized = normalize_rows(raw_rows)
+    print(f"{RECENT_URL}: {len(normalized)} Tage gelesen")
+    all_new.update(normalized)
 
     if not all_new:
         print("Keine neuen Daten erhalten, breche ab ohne Aenderungen.", file=sys.stderr)
