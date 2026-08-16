@@ -1,9 +1,5 @@
 name: Collect MeteoSwiss + BAFU data (Turso)
 
-# Unabhaengiger, paralleler Workflow zu collect.yml (Azure SQL). Schreibt
-# dieselben Quelldaten zusaetzlich nach Turso (munotstadtmeteodb).
-# Beide Pfade (Meteo + Hydro) laufen im selben Rhythmus alle 2 Stunden.
-
 on:
   schedule:
     - cron: "0 */2 * * *"   # alle 2 Stunden
@@ -40,6 +36,15 @@ jobs:
         run: python collector/collect_hydro_turso.py
         continue-on-error: true
 
+      - name: Export Sommer 2003 vs 2026 comparison -> Turso
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+        run: python collector/export_sommer_vergleich.py
+        # Bis Ende Sommer 2026 relevant fuer aktuelle Daten, danach
+        # aendert sich hier nichts mehr (beide Jahre historisch).
+        continue-on-error: true
+
       - name: Log run
         run: python collector/log_run.py
 
@@ -48,7 +53,7 @@ jobs:
           git config user.name "meteodatacollector-bot"
           git config user.email "actions@users.noreply.github.com"
           git pull --rebase --autostash origin main
-          git add data/klo_daily.json data/hydro_latest.json logs/turso-run-log.md
+          git add data/klo_daily.json data/hydro_latest.json data/sommer_vergleich.json logs/turso-run-log.md
           if git diff --cached --quiet; then
             echo "Keine Aenderungen."
           else
