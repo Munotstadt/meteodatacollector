@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sommer 2003 vs. 2026 — Zürich-Kloten</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #FFFFFF;
+    --panel: #F7F8FA;
+    --line: #E3E6EA;
+    --text: #1A1D22;
+    --muted: #767E8A;
+    --accent: #E30613;
+    --gain: #1F8A6E;
+    --loss: #C0293D;
+    --radius: 3px;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    padding: 48px 20px 80px;
+  }
+  .page{ width: 100%; max-width: 880px; }
+
+  .eyebrow{
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 18px; border-bottom: 2px solid var(--accent);
+  }
+  .brand h1{
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px;
+    letter-spacing: 0.02em; margin: 0; text-transform: uppercase;
+  }
+  .back-link{
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted);
+    text-decoration: none;
+  }
+  .back-link:hover{ color: var(--text); }
+
+  .header{ padding: 24px 0 18px; border-bottom: 2px solid var(--accent); margin-bottom: 24px; }
+  .header h2{ font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 24px; margin: 0 0 6px; }
+  .header p{ font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); margin: 0; }
+
+  .status{ font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--muted); padding: 40px 0; text-align: center; }
+  .error{ color: var(--loss); }
+
+  .compare-grid{
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 32px;
+  }
+  @media (max-width: 560px){ .compare-grid{ grid-template-columns: 1fr; } }
+
+  .year-card{
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 18px 20px;
+  }
+  .year-card.win{ border-color: var(--accent); }
+  .year-label{
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 22px; margin-bottom: 14px;
+  }
+  .metric-row{
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 8px 0; border-bottom: 1px solid var(--line);
+  }
+  .metric-row:last-child{ border-bottom: none; }
+  .metric-label{ font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); }
+  .metric-value{ font-family: 'IBM Plex Mono', monospace; font-size: 16px; font-weight: 600; }
+
+  .history-title{
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--accent); margin: 32px 0 12px;
+  }
+
+  table{ width: 100%; border-collapse: collapse; }
+  thead th{
+    text-align: left; font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500;
+    padding: 10px 10px 8px; border-bottom: 1px solid var(--line);
+  }
+  thead th.num{ text-align: right; }
+  tbody td{ padding: 10px; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .name{ font-weight: 500; }
+  .num-cell{ font-family: 'IBM Plex Mono', monospace; text-align: right; white-space: nowrap; }
+  .delta{ font-family: 'IBM Plex Mono', monospace; text-align: right; white-space: nowrap; font-size: 13px; }
+  .delta.up{ color: var(--gain); }
+  .delta.down{ color: var(--loss); }
+  .delta.flat{ color: var(--muted); }
+
+  .footer{
+    margin-top: 32px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted);
+    border-top: 1px solid var(--line); padding-top: 16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="eyebrow">
+    <div class="brand"><h1>Meteo Data</h1></div>
+    <a class="back-link" href="./index.html">&larr; zurück</a>
+  </div>
+
+  <div class="header">
+    <h2>Sommer 2003 vs. 2026</h2>
+    <p id="subline">Zürich-Kloten (KLO) · Juni – August</p>
+  </div>
+
+  <div id="status" class="status">Lade Daten…</div>
+  <div id="content" style="display:none;">
+
+    <div class="compare-grid" id="compareGrid"></div>
+
+    <div class="history-title">Details im Vergleich</div>
+    <table id="detailTable">
+      <thead>
+        <tr>
+          <th>Kennzahl</th>
+          <th class="num">2003</th>
+          <th class="num">2026</th>
+          <th class="num">Differenz</th>
+        </tr>
+      </thead>
+      <tbody id="detailBody"></tbody>
+    </table>
+
+    <div class="footer">
+      Daten: MeteoSchweiz, Station Zürich-Kloten (KLO) · Source: MeteoSchweiz.
+      Regentag = Tag mit ≥ 1.0 mm Niederschlag (meteorologische Standarddefinition).
+      <span id="metaLine"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const DATA_URL = "./data/sommer_vergleich.json";
+  const RAIN_DAY_THRESHOLD_MM = 1.0;
+
+  function fmt1(n){ return n == null ? '—' : n.toLocaleString('de-CH', { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
+  function fmt0(n){ return n == null ? '—' : Math.round(n).toLocaleString('de-CH'); }
+
+  function computeStats(days){
+    const temps = days.map(d => d.temp_mean_c).filter(v => v != null);
+    const maxTemps = days.map(d => d.temp_max_c).filter(v => v != null);
+    const minTemps = days.map(d => d.temp_min_c).filter(v => v != null);
+    const precip = days.map(d => d.precip_mm).filter(v => v != null);
+    const sunshine = days.map(d => d.sunshine_min).filter(v => v != null);
+
+    const avg = arr => arr.length ? arr.reduce((a,b) => a+b, 0) / arr.length : null;
+    const sum = arr => arr.length ? arr.reduce((a,b) => a+b, 0) : null;
+    const max = arr => arr.length ? Math.max(...arr) : null;
+
+    const rainDays = days.filter(d => d.precip_mm != null && d.precip_mm >= RAIN_DAY_THRESHOLD_MM).length;
+
+    return {
+      dayCount: days.length,
+      tempMeanAvg: avg(temps),
+      tempMaxAvg: avg(maxTemps),
+      tempMaxHighest: max(maxTemps),
+      tempMinAvg: avg(minTemps),
+      precipTotal: sum(precip),
+      rainDays: rainDays,
+      sunshineHoursTotal: sunshine.length ? sum(sunshine) / 60 : null,
+    };
+  }
+
+  function fmtDelta(a, b, decimals, unit, higherIsFirst){
+    if (a == null || b == null) return { text: '—', dir: 'flat' };
+    const diff = a - b;
+    const dir = diff > 0.05 ? 'up' : diff < -0.05 ? 'down' : 'flat';
+    return { text: (diff > 0 ? '+' : '') + diff.toFixed(decimals) + unit, dir };
+  }
+
+  function metricRow(label, val2003, val2026, decimals, unit){
+    return '<div class="metric-row"><span class="metric-label">' + label + '</span>' +
+      '<span class="metric-value">' + (val2003 == null ? '—' : val2003.toFixed(decimals) + unit) + '</span></div>';
+  }
+
+  async function init(){
+    const statusEl = document.getElementById('status');
+    try {
+      const resp = await fetch(DATA_URL, { cache: 'no-store' });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+
+      const days2003 = (data.years && data.years['2003'] && data.years['2003'].days) || [];
+      const days2026 = (data.years && data.years['2026'] && data.years['2026'].days) || [];
+
+      if (days2003.length === 0 && days2026.length === 0) {
+        throw new Error('Keine Daten für 2003/2026 gefunden.');
+      }
+
+      const s2003 = computeStats(days2003);
+      const s2026 = computeStats(days2026);
+
+      statusEl.style.display = 'none';
+      document.getElementById('content').style.display = 'block';
+
+      if (data.summer_range) {
+        document.getElementById('subline').textContent = 'Zürich-Kloten (KLO) · ' + data.summer_range;
+      }
+
+      // --- Karten (Schnellübersicht) ---
+      const grid = document.getElementById('compareGrid');
+      [['2003', s2003], ['2026', s2026]].forEach(function([year, s]){
+        const div = document.createElement('div');
+        div.className = 'year-card';
+        div.innerHTML =
+          '<div class="year-label">' + year + '</div>' +
+          metricRow('Temp. Mittel', s.tempMeanAvg, null, 1, '°C') +
+          metricRow('Temp. Max Ø', s.tempMaxAvg, null, 1, '°C') +
+          metricRow('Höchstwert', s.tempMaxHighest, null, 1, '°C') +
+          metricRow('Niederschlag total', s.precipTotal, null, 0, ' mm') +
+          metricRow('Regentage', s.rainDays, null, 0, '') +
+          metricRow('Sonnenstunden total', s.sunshineHoursTotal, null, 0, ' h') +
+          '<div class="metric-row"><span class="metric-label">Tage erfasst</span><span class="metric-value">' + s.dayCount + '</span></div>';
+        grid.appendChild(div);
+      });
+
+      // Waermeren/sonnigeren/trockeneren Sommer optisch markieren
+      if (s2003.tempMeanAvg != null && s2026.tempMeanAvg != null) {
+        const cards = grid.querySelectorAll('.year-card');
+        if (s2003.tempMeanAvg > s2026.tempMeanAvg) cards[0].classList.add('win');
+        else if (s2026.tempMeanAvg > s2003.tempMeanAvg) cards[1].classList.add('win');
+      }
+
+      // --- Detailtabelle mit Differenzen ---
+      const rows = [
+        { label: 'Temperatur, Tagesmittel Ø', a: s2003.tempMeanAvg, b: s2026.tempMeanAvg, decimals: 1, unit: '°C' },
+        { label: 'Tagesmaximum Ø', a: s2003.tempMaxAvg, b: s2026.tempMaxAvg, decimals: 1, unit: '°C' },
+        { label: 'Höchster Tageswert', a: s2003.tempMaxHighest, b: s2026.tempMaxHighest, decimals: 1, unit: '°C' },
+        { label: 'Tagesminimum Ø', a: s2003.tempMinAvg, b: s2026.tempMinAvg, decimals: 1, unit: '°C' },
+        { label: 'Niederschlag, Summe', a: s2003.precipTotal, b: s2026.precipTotal, decimals: 0, unit: ' mm' },
+        { label: 'Regentage (≥ 1 mm)', a: s2003.rainDays, b: s2026.rainDays, decimals: 0, unit: '' },
+        { label: 'Sonnenstunden, Summe', a: s2003.sunshineHoursTotal, b: s2026.sunshineHoursTotal, decimals: 0, unit: ' h' },
+      ];
+
+      document.getElementById('detailBody').innerHTML = rows.map(function(r){
+        const d = fmtDelta(r.b, r.a, r.decimals, r.unit);
+        return '<tr>' +
+          '<td class="name">' + r.label + '</td>' +
+          '<td class="num-cell">' + (r.a == null ? '—' : r.a.toFixed(r.decimals) + r.unit) + '</td>' +
+          '<td class="num-cell">' + (r.b == null ? '—' : r.b.toFixed(r.decimals) + r.unit) + '</td>' +
+          '<td class="delta ' + d.dir + '">' + d.text + '</td>' +
+        '</tr>';
+      }).join('');
+
+      if (data.generated_at) {
+        document.getElementById('metaLine').textContent = ' Aktualisiert: ' + new Date(data.generated_at).toLocaleString('de-CH') + '.';
+      }
+      if (s2026.dayCount < 92) {
+        document.getElementById('metaLine').textContent += ' Sommer 2026 ist noch nicht vollständig (' + s2026.dayCount + ' von 92 Tagen erfasst).';
+      }
+
+    } catch (err) {
+      statusEl.textContent = 'Konnte Daten nicht laden: ' + err.message;
+      statusEl.classList.add('error');
+    }
+  }
+
+  init();
+</script>
+
+</body>
+</html>
