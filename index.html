@@ -19,106 +19,51 @@
     --loss: #C0293D;
     --radius: 3px;
   }
-
   * { box-sizing: border-box; }
-
   body{
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
+    margin: 0; background: var(--bg); color: var(--text);
     font-family: 'Inter', system-ui, sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
     padding: 48px 20px 80px;
   }
-
   .detail{ width: 100%; max-width: 880px; }
 
   .eyebrow{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: 18px;
-    border-bottom: 2px solid var(--accent);
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 18px; border-bottom: 2px solid var(--accent);
   }
-
   .brand{ display: flex; align-items: baseline; gap: 10px; }
-
   .brand h1{
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 700;
-    font-size: 20px;
-    letter-spacing: 0.02em;
-    margin: 0;
-    text-transform: uppercase;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px;
+    letter-spacing: 0.02em; margin: 0; text-transform: uppercase;
   }
-
-  .brand span.sub{
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    color: var(--muted);
-  }
-
   .status{
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
-    color: var(--muted);
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--muted);
   }
-
   .dot{
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--gain);
-    box-shadow: 0 0 0 3px rgba(31,138,110,0.15);
-    animation: pulse 2.4s ease-in-out infinite;
+    width: 7px; height: 7px; border-radius: 50%; background: var(--gain);
+    box-shadow: 0 0 0 3px rgba(31,138,110,0.15); animation: pulse 2.4s ease-in-out infinite;
   }
   .dot.stale{ background: var(--muted); box-shadow: none; animation: none; }
   @media (prefers-reduced-motion: reduce){ .dot{ animation: none; } }
   @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.45;} }
 
   table{ width: 100%; border-collapse: collapse; margin-top: 4px; }
-
   thead th{
-    text-align: left;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-    font-weight: 500;
-    padding: 14px 10px 10px;
-    border-bottom: 1px solid var(--line);
+    text-align: left; font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500;
+    padding: 14px 10px 10px; border-bottom: 1px solid var(--line);
   }
   thead th.num{ text-align: right; }
-
-  tbody td{
-    padding: 12px 10px;
-    border-bottom: 1px solid var(--line);
-    font-size: 14px;
-    vertical-align: middle;
-  }
-
+  tbody td{ padding: 12px 10px; border-bottom: 1px solid var(--line); font-size: 14px; vertical-align: middle; }
   .price, .time{ font-family: 'IBM Plex Mono', monospace; text-align: right; color: var(--text); white-space: nowrap; }
   .time{ color: var(--muted); font-size: 13px; text-align: left; }
-
   .name{ font-weight: 500; }
-
-  .chg{
-    font-family: 'IBM Plex Mono', monospace;
-    text-align: right;
-    white-space: nowrap;
-    font-size: 13px;
-  }
+  .chg{ font-family: 'IBM Plex Mono', monospace; text-align: right; white-space: nowrap; font-size: 13px; }
   .chg.up{ color: var(--gain); }
   .chg.down{ color: var(--loss); }
   .chg.flat{ color: var(--muted); }
-
   .empty, .error{
     padding: 40px 10px; text-align: center; color: var(--muted);
     font-family: 'IBM Plex Mono', monospace; font-size: 13px;
@@ -129,67 +74,39 @@
     display: flex; align-items: baseline; justify-content: space-between;
     padding-bottom: 18px; border-bottom: 2px solid var(--accent);
   }
-
-  .detail-header h2{
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 700;
-    font-size: 20px;
-    margin: 0;
-  }
-
+  .detail-header h2{ font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; margin: 0; }
   .stand-badge{
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--muted);
-    vertical-align: middle;
-    margin-left: 4px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500;
+    color: var(--muted); vertical-align: middle; margin-left: 4px;
   }
-
-  .detail-sub{ font-family: 'Inter', sans-serif; font-size: 14px; color: var(--muted); margin: 0 0 12px; }
-
   .detail-returns{ display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
-
   .return-box{
     display: flex; flex-direction: column; gap: 4px;
     padding: 10px 14px; background: var(--panel); border: 1px solid var(--line);
     border-radius: var(--radius); min-width: 108px; flex: 1 1 108px;
   }
-
   .return-label{
     font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em;
     text-transform: uppercase; color: var(--muted);
   }
-
   .return-value{ font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600; }
   .return-value.up{ color: var(--gain); }
   .return-value.down{ color: var(--loss); }
   .return-value.flat{ color: var(--text); }
-
   .return-abs{ font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); }
   .return-abs.up{ color: var(--gain); }
   .return-abs.down{ color: var(--loss); }
-
   .detail-meta{ font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); margin-top: 16px; }
 
-  .range-selector{ display: flex; gap: 6px; margin-top: 28px; flex-wrap: wrap; }
-
-  .custom-range{
-    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-    margin-top: 10px;
-  }
-  .custom-range label{
-    font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted);
-  }
-  .custom-range input[type="date"]{
-    font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text);
-    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
-    padding: 5px 8px;
-  }
-  .custom-range input[type="date"]:focus-visible{
-    outline: 2px solid var(--accent); outline-offset: 1px;
+  .section-divider{ border: none; border-top: 1px solid var(--line); margin: 36px 0; }
+  .section-heading{
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px;
+    margin: 0 0 4px;
   }
 
+  .range-row{
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 16px;
+  }
   .range-btn{
     background: none; border: 1px solid var(--line); color: var(--muted);
     font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 6px 12px;
@@ -199,12 +116,20 @@
   .range-btn:hover{ border-color: var(--muted); color: var(--text); }
   .range-btn.active{ background: var(--text); border-color: var(--text); color: var(--bg); font-weight: 600; }
   .range-btn:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
+  .range-sep{ width: 1px; height: 18px; background: var(--line); margin: 0 2px; }
+  .custom-range{ display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .custom-range label{ font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); }
+  .custom-range input[type="date"]{
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text);
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 5px 8px;
+  }
+  .custom-range input[type="date"]:focus-visible{ outline: 2px solid var(--accent); outline-offset: 1px; }
 
   .history-title{
     font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em;
     text-transform: uppercase; color: var(--accent); margin: 32px 0 6px;
   }
-
   .collapsible-toggle{
     display: flex; align-items: center; gap: 6px;
     background: none; border: none; padding: 0; margin: 32px 0 6px;
@@ -212,7 +137,6 @@
   }
   .collapsible-toggle:hover .collapsible-arrow{ color: var(--text); }
   .collapsible-toggle:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
-
   .collapsible-arrow{
     display: inline-block; font-size: 9px; color: var(--muted);
     transition: transform 0.15s ease, color 0.15s ease;
@@ -230,7 +154,6 @@
   .chart-tooltip-g .tooltip-dot{ pointer-events: none; }
   .chart-tooltip-g .tooltip-text{ pointer-events: none; }
   .chart-empty{ padding: 40px 10px; text-align: center; color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
-
   .chart-readout{
     font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted);
     margin: 6px 2px 0; min-height: 16px;
@@ -242,85 +165,50 @@
     font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); flex-wrap: wrap; gap: 6px;
   }
 
-  /* ---------- Hydro range-bar cards ---------- */
-
-  .hydro-cards{ display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
-
+  .hydro-cards{ display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
   .hydro-section-header{
     display: flex; align-items: baseline; justify-content: space-between;
     margin: 40px 0 16px; padding-bottom: 14px; border-bottom: 2px solid var(--accent);
   }
-  .hydro-section-header h2{
-    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; margin: 0;
-  }
-
-  .hydro-card-head{
-    display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
-    margin-bottom: 26px;
-  }
-
-  .hydro-card-delta{
-    font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; white-space: nowrap;
-  }
-  .hydro-card-delta.up{ color: var(--gain); }
-  .hydro-card-delta.down{ color: var(--loss); }
-  .hydro-card-delta.flat{ color: var(--muted); }
+  .hydro-section-header h2{ font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; margin: 0; }
 
   .hydro-card{
+    flex: 1 1 170px;
     background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
-    padding: 14px 18px 16px;
+    padding: 14px 16px 16px; display: flex; flex-direction: column; align-items: center;
   }
-
+  .hydro-card-head{ width: 100%; display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
   .hydro-card-label{
     font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.06em;
     text-transform: uppercase; color: var(--muted);
   }
+  .hydro-card-delta{ font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .hydro-card-delta.up{ color: var(--gain); }
+  .hydro-card-delta.down{ color: var(--loss); }
+  .hydro-card-delta.flat{ color: var(--muted); }
 
-  .range-bar-wrap{ position: relative; margin: 0 2px 10px; }
-
-  .range-track{
-    height: 6px; border-radius: 3px;
-    background: linear-gradient(90deg, var(--line), var(--station-color, var(--text)));
-  }
-
-  /* Value label: clamped so it never overflows the card, independent of
-     the arrow's exact position. */
-  .range-marker-value-wrap{
-    position: absolute; top: -24px; left: 0%;
-    white-space: nowrap;
-    transition: left 0.2s ease;
-  }
-  .range-marker-value-wrap.align-center{ transform: translateX(-50%); text-align: center; }
-  .range-marker-value-wrap.align-left{ transform: translateX(0%); text-align: left; }
-  .range-marker-value-wrap.align-right{ transform: translateX(-100%); text-align: right; }
-
-  .range-marker-value{
+  .vbar-max-label, .vbar-min-label{
     font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; color: var(--text);
   }
-
-  /* Arrow: always exactly centered on the true data point on the track. */
-  .range-marker-arrow-wrap{
-    position: absolute; top: -6px; left: 0%;
-    transform: translateX(-50%);
-    transition: left 0.2s ease;
+  .vbar-track-wrap{ position: relative; width: 12px; height: 140px; margin: 6px 0; }
+  .vbar-track{
+    position: absolute; left: 0; top: 0; width: 12px; height: 100%; border-radius: 6px;
+    background: linear-gradient(to top, var(--line), var(--station-color, var(--text)));
   }
-
-  .range-marker-arrow{
-    width: 0; height: 0;
-    border-left: 5px solid transparent; border-right: 5px solid transparent;
-    border-top: 6px solid var(--text);
+  .vbar-marker{
+    position: absolute; left: 50%; bottom: 0%; transform: translate(-50%, 50%);
+    display: flex; align-items: center; gap: 6px; white-space: nowrap;
+    transition: bottom 0.2s ease;
   }
-
-  .range-labels{ display: flex; justify-content: space-between; gap: 10px; }
-
-  .range-label-min, .range-label-max{ display: flex; flex-direction: column; }
-  .range-label-max{ align-items: flex-end; }
-
-  .range-label-value{ font-family: 'IBM Plex Mono', monospace; font-size: 16px; font-weight: 600; }
-  .range-label-date{ font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-  .hydro-card-meta{
-    font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 12px;
+  .vbar-marker::before{ content: ''; width: 18px; height: 2px; background: var(--text); display: block; flex-shrink: 0; }
+  .vbar-marker-value{
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700;
+    background: var(--text); color: var(--bg); padding: 2px 6px; border-radius: 3px;
+  }
+  .hydro-card-meta{ font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 12px; text-align: center; }
+  .hydro-caption{
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted);
+    margin-top: 10px;
   }
 
   @media (max-width: 560px){
@@ -328,7 +216,9 @@
     #historyTable thead th:nth-child(6), #historyTable tbody td:nth-child(6),
     #historyTable thead th:nth-child(7), #historyTable tbody td:nth-child(7) { display: none; }
     #comparisonTable thead th:nth-child(4), #comparisonTable tbody td:nth-child(4),
-    #comparisonTable thead th:nth-child(5), #comparisonTable tbody td:nth-child(5) { display: none; }
+    #comparisonTable thead th:nth-child(5), #comparisonTable tbody td:nth-child(5),
+    #comparisonTable thead th:nth-child(8), #comparisonTable tbody td:nth-child(8),
+    #comparisonTable thead th:nth-child(9), #comparisonTable tbody td:nth-child(9) { display: none; }
   }
 </style>
 </head>
@@ -336,9 +226,7 @@
 
 <div class="detail" id="detailView">
   <div class="eyebrow">
-    <div class="brand">
-      <h1>Meteo Data</h1>
-    </div>
+    <div class="brand"><h1>Meteo Data</h1></div>
     <div class="status">
       <span class="dot" id="statusDot"></span>
       <span id="statusText">connecting…</span>
@@ -366,25 +254,19 @@
     <h2>Hydrodaten</h2>
     <span class="stand-badge" id="hydroStandBadge">—</span>
   </div>
+
   <div class="hydro-cards" id="hydroCards">
     <div class="hydro-card">
       <div class="hydro-card-head">
         <span class="hydro-card-label">Bodensee Berlingen — Pegel (m ü. M.)</span>
         <span class="hydro-card-delta" id="deltaBodensee"></span>
       </div>
-      <div class="range-bar-wrap">
-        <div class="range-marker-value-wrap align-center" id="markerBodensee">
-          <span class="range-marker-value" id="markerBodenseeValue">—</span>
-        </div>
-        <div class="range-marker-arrow-wrap" id="arrowBodensee">
-          <div class="range-marker-arrow"></div>
-        </div>
-        <div class="range-track" id="trackBodensee"></div>
+      <span class="vbar-max-label" id="maxBodensee">—</span>
+      <div class="vbar-track-wrap">
+        <div class="vbar-track" id="trackBodensee"></div>
+        <div class="vbar-marker" id="markerBodensee"><span class="vbar-marker-value" id="markerBodenseeValue">—</span></div>
       </div>
-      <div class="range-labels">
-        <div class="range-label-min"><span class="range-label-value" id="minBodensee">—</span><span class="range-label-date" id="minBodenseeDate"></span></div>
-        <div class="range-label-max"><span class="range-label-value" id="maxBodensee">—</span><span class="range-label-date" id="maxBodenseeDate"></span></div>
-      </div>
+      <span class="vbar-min-label" id="minBodensee">—</span>
       <div class="hydro-card-meta" id="metaBodensee"></div>
     </div>
 
@@ -393,19 +275,12 @@
         <span class="hydro-card-label">Rhein Neuhausen — Abfluss (m³/s)</span>
         <span class="hydro-card-delta" id="deltaRhein"></span>
       </div>
-      <div class="range-bar-wrap">
-        <div class="range-marker-value-wrap align-center" id="markerRhein">
-          <span class="range-marker-value" id="markerRheinValue">—</span>
-        </div>
-        <div class="range-marker-arrow-wrap" id="arrowRhein">
-          <div class="range-marker-arrow"></div>
-        </div>
-        <div class="range-track" id="trackRhein"></div>
+      <span class="vbar-max-label" id="maxRhein">—</span>
+      <div class="vbar-track-wrap">
+        <div class="vbar-track" id="trackRhein"></div>
+        <div class="vbar-marker" id="markerRhein"><span class="vbar-marker-value" id="markerRheinValue">—</span></div>
       </div>
-      <div class="range-labels">
-        <div class="range-label-min"><span class="range-label-value" id="minRhein">—</span><span class="range-label-date" id="minRheinDate"></span></div>
-        <div class="range-label-max"><span class="range-label-value" id="maxRhein">—</span><span class="range-label-date" id="maxRheinDate"></span></div>
-      </div>
+      <span class="vbar-min-label" id="minRhein">—</span>
       <div class="hydro-card-meta" id="metaRhein"></div>
     </div>
 
@@ -414,35 +289,53 @@
         <span class="hydro-card-label">Glatt Rheinsfelden — Abfluss (m³/s)</span>
         <span class="hydro-card-delta" id="deltaGlatt"></span>
       </div>
-      <div class="range-bar-wrap">
-        <div class="range-marker-value-wrap align-center" id="markerGlatt">
-          <span class="range-marker-value" id="markerGlattValue">—</span>
-        </div>
-        <div class="range-marker-arrow-wrap" id="arrowGlatt">
-          <div class="range-marker-arrow"></div>
-        </div>
-        <div class="range-track" id="trackGlatt"></div>
+      <span class="vbar-max-label" id="maxGlatt">—</span>
+      <div class="vbar-track-wrap">
+        <div class="vbar-track" id="trackGlatt"></div>
+        <div class="vbar-marker" id="markerGlatt"><span class="vbar-marker-value" id="markerGlattValue">—</span></div>
       </div>
-      <div class="range-labels">
-        <div class="range-label-min"><span class="range-label-value" id="minGlatt">—</span><span class="range-label-date" id="minGlattDate"></span></div>
-        <div class="range-label-max"><span class="range-label-value" id="maxGlatt">—</span><span class="range-label-date" id="maxGlattDate"></span></div>
-      </div>
+      <span class="vbar-min-label" id="minGlatt">—</span>
       <div class="hydro-card-meta" id="metaGlatt"></div>
     </div>
   </div>
+  <div class="hydro-caption">Min/Max jeweils seit Beginn der Aufzeichnung.</div>
 
-  <div class="range-selector" id="rangeSelector">
+  <hr class="section-divider">
+
+  <div class="history-title">Vergleich — Tagesdurchschnitte</div>
+  <table id="comparisonTable">
+    <thead>
+      <tr>
+        <th>Kennzahl</th>
+        <th class="num">Schnitt 7 Tage</th>
+        <th class="num">Δ Vorwoche</th>
+        <th class="num">Schnitt Monat</th>
+        <th class="num">Δ Vorjahr</th>
+        <th class="num">Schnitt YTD</th>
+        <th class="num">Δ Vorjahr</th>
+        <th class="num">Schnitt 360 Tage</th>
+        <th class="num">Δ P360 Tage</th>
+      </tr>
+    </thead>
+    <tbody id="comparisonBody">
+      <tr><td colspan="9" class="empty">Loading…</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="section-heading" style="margin-top:36px;">Diagramme</h2>
+
+  <div class="range-row" id="rangeSelector">
     <button type="button" class="range-btn" data-range="30D">30 Tage</button>
     <button type="button" class="range-btn active" data-range="90D">90 Tage</button>
     <button type="button" class="range-btn" data-range="12M">1 Jahr</button>
     <button type="button" class="range-btn" data-range="3Y">3 Jahre</button>
-  </div>
-
-  <div class="custom-range" id="customRange">
-    <label for="rangeFrom">Von</label>
-    <input type="date" id="rangeFrom">
-    <label for="rangeTo">Bis</label>
-    <input type="date" id="rangeTo">
+    <span class="range-sep"></span>
+    <div class="custom-range" id="customRange">
+      <label for="rangeFrom">Von</label>
+      <input type="date" id="rangeFrom">
+      <label for="rangeTo">Bis</label>
+      <input type="date" id="rangeTo">
+    </div>
   </div>
 
   <div class="history-title">Temperatur — Tagesmittel, Min/Max (°C)</div>
@@ -469,26 +362,20 @@
   <div class="chart-wrap" id="chartHum"><div class="chart-empty">Loading chart…</div></div>
   <div class="chart-readout" id="chartHumReadout">Tippe auf einen Punkt für Details.</div>
 
-  <div class="history-title">Vergleich — Tagesdurchschnitte</div>
-  <table id="comparisonTable">
-    <thead>
-      <tr>
-        <th>Kennzahl</th>
-        <th class="num">7 Tage Ø</th>
-        <th class="num">Δ vs. Vorwoche</th>
-        <th class="num">Monat Ø</th>
-        <th class="num">Δ vs. Vorjahr</th>
-        <th class="num">YTD Ø</th>
-        <th class="num">Δ vs. Vorjahr</th>
-      </tr>
-    </thead>
-    <tbody id="comparisonBody">
-      <tr><td colspan="7" class="empty">Loading…</td></tr>
-    </tbody>
-  </table>
+  <div class="history-title">Bodensee — Pegel Berlingen (m ü. M.)</div>
+  <div class="chart-wrap" id="chartBodensee"><div class="chart-empty">Loading chart…</div></div>
+  <div class="chart-readout" id="chartBodenseeReadout">Tippe auf einen Punkt für Details.</div>
+
+  <div class="history-title">Rhein — Abfluss Neuhausen (m³/s)</div>
+  <div class="chart-wrap" id="chartRhein"><div class="chart-empty">Loading chart…</div></div>
+  <div class="chart-readout" id="chartRheinReadout">Tippe auf einen Punkt für Details.</div>
+
+  <div class="history-title">Glatt — Abfluss Rheinsfelden (m³/s)</div>
+  <div class="chart-wrap" id="chartGlatt"><div class="chart-empty">Loading chart…</div></div>
+  <div class="chart-readout" id="chartGlattReadout">Tippe auf einen Punkt für Details.</div>
 
   <button type="button" class="history-title collapsible-toggle" id="historyToggle" aria-expanded="false">
-    <span class="collapsible-arrow">▶</span> Letzte Messwerte
+    <span class="collapsible-arrow">▶</span> Letzte Messwerte Meteo
   </button>
   <table id="historyTable" class="collapsible-content" hidden>
     <thead>
@@ -507,19 +394,6 @@
     </tbody>
   </table>
 
-
-  <div class="history-title">Bodensee — Pegel Berlingen (m ü. M.)</div>
-  <div class="chart-wrap" id="chartBodensee"><div class="chart-empty">Loading chart…</div></div>
-  <div class="chart-readout" id="chartBodenseeReadout">Tippe auf einen Punkt für Details.</div>
-
-  <div class="history-title">Rhein — Abfluss Neuhausen (m³/s)</div>
-  <div class="chart-wrap" id="chartRhein"><div class="chart-empty">Loading chart…</div></div>
-  <div class="chart-readout" id="chartRheinReadout">Tippe auf einen Punkt für Details.</div>
-
-  <div class="history-title">Glatt — Abfluss Rheinsfelden (m³/s)</div>
-  <div class="chart-wrap" id="chartGlatt"><div class="chart-empty">Loading chart…</div></div>
-  <div class="chart-readout" id="chartGlattReadout">Tippe auf einen Punkt für Details.</div>
-
   <div class="footer">
     <span>Daten: MeteoSchweiz (KLO) · Source: MeteoSchweiz · Hydrodaten: Bundesamt für Umwelt BAFU (LINDAS) - Source: BAFU</span>
     <span id="detailMeta">—</span>
@@ -529,6 +403,8 @@
 <script>
   const DATA_URL = "./data/klo_daily.json";
   const HYDRO_DATA_URL = "./data/hydro_latest.json";
+
+  let comparisonRefDate = null;
 
   function fmt1(n){ return n == null ? '—' : n.toLocaleString('de-CH', { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
   function fmt0(n){ return n == null ? '—' : Math.round(n).toLocaleString('de-CH'); }
@@ -590,13 +466,6 @@
     const valStr = v.toLocaleString('de-CH', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
     return label + ': ' + valStr + (opts.unit || '');
   }
-
-  // ---------------- Chart-Interaktion (Hover/Tap zeigt den Wert) ----------------
-  // Ein Registry-Eintrag pro Chart-Container mit den echten Datenpunkt-
-  // Positionen im SVG-Koordinatenraum. Ein einziges grosses Hit-Rechteck
-  // pro Chart sucht bei Zeigerbewegung/Tap per naechstem-Nachbarn (auf der
-  // x-Achse) den tatsaechlich gemeinten Punkt - robust, auch wenn Punkte
-  // auf dem Bildschirm nur wenige Pixel auseinanderliegen.
 
   const chartRegistry = {};
 
@@ -778,10 +647,6 @@
 
     const bandSvg = bandPath ? '<path d="' + bandPath + '" fill="' + lineColor + '" opacity="0.10" stroke="none" />' : '';
 
-    // Registrierung fuer die Zeigerinteraktion: ein Punkt pro Datenwert,
-    // mit exakter x/y-Position im SVG-Koordinatenraum. Ein einziges,
-    // grosszuegiges Hit-Rechteck (statt vieler kleiner, sich ueberlappender
-    // Kreise) findet danach per naechstem-Nachbarn den richtigen Punkt.
     const registryPoints = points.map(function(p){
       return { x: xScale(p.dt.getTime()), y: yScale(p.v), label: fmtPointLabel(p.dt, p.v, opts) };
     });
@@ -900,51 +765,65 @@
     return { text: (diff > 0 ? '+' : '') + diff.toFixed(decimals) + unit, dir: dir };
   }
 
-  function renderComparisonTable(days, latestDate){
-    const last7Start = addDays(latestDate, -6), last7End = latestDate;
-    const prev7Start = addDays(latestDate, -13), prev7End = addDays(latestDate, -7);
+  function buildComparisonRow(label, getValue, decimals, unit, dataset, refDate){
+    const last7Start = addDays(refDate, -6), last7End = refDate;
+    const prev7Start = addDays(refDate, -13), prev7End = addDays(refDate, -7);
 
-    const monthStart = new Date(latestDate.getFullYear(), latestDate.getMonth(), 1);
-    const monthEnd = latestDate;
-    const monthPrevYearStart = new Date(latestDate.getFullYear() - 1, latestDate.getMonth(), 1);
-    const monthPrevYearEnd = new Date(latestDate.getFullYear() - 1, latestDate.getMonth(), latestDate.getDate());
+    const monthStart = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
+    const monthEnd = refDate;
+    const monthPrevYearStart = new Date(refDate.getFullYear() - 1, refDate.getMonth(), 1);
+    const monthPrevYearEnd = new Date(refDate.getFullYear() - 1, refDate.getMonth(), refDate.getDate());
 
-    const ytdStart = new Date(latestDate.getFullYear(), 0, 1);
-    const ytdEnd = latestDate;
-    const ytdPrevYearStart = new Date(latestDate.getFullYear() - 1, 0, 1);
-    const ytdPrevYearEnd = new Date(latestDate.getFullYear() - 1, latestDate.getMonth(), latestDate.getDate());
+    const ytdStart = new Date(refDate.getFullYear(), 0, 1);
+    const ytdEnd = refDate;
+    const ytdPrevYearStart = new Date(refDate.getFullYear() - 1, 0, 1);
+    const ytdPrevYearEnd = new Date(refDate.getFullYear() - 1, refDate.getMonth(), refDate.getDate());
 
+    const last360Start = addDays(refDate, -359), last360End = refDate;
+    const prior360Start = addDays(refDate, -719), prior360End = addDays(refDate, -360);
+
+    const w1 = periodAvg(dataset, last7Start, last7End, getValue);
+    const w0 = periodAvg(dataset, prev7Start, prev7End, getValue);
+    const mo1 = periodAvg(dataset, monthStart, monthEnd, getValue);
+    const mo0 = periodAvg(dataset, monthPrevYearStart, monthPrevYearEnd, getValue);
+    const y1 = periodAvg(dataset, ytdStart, ytdEnd, getValue);
+    const y0 = periodAvg(dataset, ytdPrevYearStart, ytdPrevYearEnd, getValue);
+    const p1 = periodAvg(dataset, last360Start, last360End, getValue);
+    const p0 = periodAvg(dataset, prior360Start, prior360End, getValue);
+
+    const wDelta = fmtCompDelta(w1, w0, decimals, unit);
+    const moDelta = fmtCompDelta(mo1, mo0, decimals, unit);
+    const yDelta = fmtCompDelta(y1, y0, decimals, unit);
+    const pDelta = fmtCompDelta(p1, p0, decimals, unit);
+
+    return '<tr>' +
+      '<td class="name">' + label + '</td>' +
+      '<td class="price">' + fmtCompVal(w1, decimals, unit) + '</td>' +
+      '<td class="chg ' + wDelta.dir + '">' + wDelta.text + '</td>' +
+      '<td class="price">' + fmtCompVal(mo1, decimals, unit) + '</td>' +
+      '<td class="chg ' + moDelta.dir + '">' + moDelta.text + '</td>' +
+      '<td class="price">' + fmtCompVal(y1, decimals, unit) + '</td>' +
+      '<td class="chg ' + yDelta.dir + '">' + yDelta.text + '</td>' +
+      '<td class="price">' + fmtCompVal(p1, decimals, unit) + '</td>' +
+      '<td class="chg ' + pDelta.dir + '">' + pDelta.text + '</td>' +
+    '</tr>';
+  }
+
+  function renderComparisonTable(days, refDate){
     const metrics = [
       { label: 'Temperatur', unit: '°C', decimals: 1, get: function(d){ return d.temp_mean_c; } },
       { label: 'Sonnenschein', unit: ' h', decimals: 1, get: function(d){ return d.sunshine_min != null ? d.sunshine_min / 60 : null; } },
       { label: 'Niederschlag', unit: ' mm', decimals: 1, get: function(d){ return d.precip_mm; } },
       { label: 'Globalstrahlung', unit: ' W/m²', decimals: 0, get: function(d){ return d.radiation_wm2; } },
     ];
-
-    const rowsHtml = metrics.map(function(m){
-      const w1 = periodAvg(days, last7Start, last7End, m.get);
-      const w0 = periodAvg(days, prev7Start, prev7End, m.get);
-      const mo1 = periodAvg(days, monthStart, monthEnd, m.get);
-      const mo0 = periodAvg(days, monthPrevYearStart, monthPrevYearEnd, m.get);
-      const y1 = periodAvg(days, ytdStart, ytdEnd, m.get);
-      const y0 = periodAvg(days, ytdPrevYearStart, ytdPrevYearEnd, m.get);
-
-      const wDelta = fmtCompDelta(w1, w0, m.decimals, m.unit);
-      const moDelta = fmtCompDelta(mo1, mo0, m.decimals, m.unit);
-      const yDelta = fmtCompDelta(y1, y0, m.decimals, m.unit);
-
-      return '<tr>' +
-        '<td class="name">' + m.label + '</td>' +
-        '<td class="price">' + fmtCompVal(w1, m.decimals, m.unit) + '</td>' +
-        '<td class="chg ' + wDelta.dir + '">' + wDelta.text + '</td>' +
-        '<td class="price">' + fmtCompVal(mo1, m.decimals, m.unit) + '</td>' +
-        '<td class="chg ' + moDelta.dir + '">' + moDelta.text + '</td>' +
-        '<td class="price">' + fmtCompVal(y1, m.decimals, m.unit) + '</td>' +
-        '<td class="chg ' + yDelta.dir + '">' + yDelta.text + '</td>' +
-      '</tr>';
+    document.getElementById('comparisonBody').innerHTML = metrics.map(function(m){
+      return buildComparisonRow(m.label, m.get, m.decimals, m.unit, days, refDate);
     }).join('');
+  }
 
-    document.getElementById('comparisonBody').innerHTML = rowsHtml;
+  function appendHydroComparisonRow(label, readings, key, decimals, unit, refDate){
+    const rowHtml = buildComparisonRow(label, function(r){ return r[key]; }, decimals, unit, readings, refDate);
+    document.getElementById('comparisonBody').insertAdjacentHTML('beforeend', rowHtml);
   }
 
   async function init() {
@@ -979,6 +858,8 @@
       document.getElementById('detailMeta').textContent =
         'Quelle: MeteoSchweiz · ' + days.length + ' Tage im Archiv';
 
+      comparisonRefDate = latest._date;
+
       let currentRange = '90D';
       let customFrom = null, customTo = null;
       const chartContainers = {
@@ -1012,8 +893,6 @@
         });
       });
 
-      // Von/Bis: minimal waehlbares Datum ist 20 Jahre zurueck (weiter
-      // reicht der Datenexport ohnehin nicht), maximal der juengste Tag.
       const rangeFromEl = document.getElementById('rangeFrom');
       const rangeToEl = document.getElementById('rangeTo');
       const minDate = new Date(latest._date.getFullYear() - 20, latest._date.getMonth(), latest._date.getDate());
@@ -1059,14 +938,10 @@
       ['chartTemp','chartPrecip','chartSun','chartRad','chartWind','chartHum'].forEach(function(id){
         document.getElementById(id).innerHTML = '<div class="chart-empty">Konnte Daten nicht laden: ' + err.message + '</div>';
       });
-      document.getElementById('comparisonBody').innerHTML = '<tr><td colspan="7" class="error">Konnte Daten nicht laden: ' + err.message + '</td></tr>';
+      document.getElementById('comparisonBody').innerHTML = '<tr><td colspan="9" class="error">Konnte Daten nicht laden: ' + err.message + '</td></tr>';
       document.getElementById('historyBody').innerHTML = '<tr><td colspan="7" class="error">Konnte Daten nicht laden: ' + err.message + '</td></tr>';
     }
   }
-
-  // ---------------- Hydrologie (BAFU / LINDAS) ----------------
-  // Eigener, unabhaengiger Block: ein Problem hier soll die Meteo-Anzeige
-  // oben nicht mitreissen (daher eigenes try/catch, eigener fetch).
 
   function parseISODateTime(iso){ return new Date(iso); }
 
@@ -1082,8 +957,6 @@
     return dd + '.' + mm + '.' + date.getFullYear() + ' ' + hh + ':' + mi;
   }
 
-  // Sucht die Messung, die zeitlich am naechsten an "target" liegt (z.B.
-  // "vor 24h") - nur innerhalb von toleranceMs, sonst kein Vergleichswert.
   function findClosestToTime(points, target, toleranceMs){
     let best = null, bestDiff = Infinity;
     points.forEach(function(p){
@@ -1094,15 +967,12 @@
     return null;
   }
 
-  function renderRangeBar(prefix, readings, key, decimals, unit, color) {
+  function renderVerticalBar(prefix, readings, key, decimals, unit, color) {
     const track = document.getElementById('track' + prefix);
     const marker = document.getElementById('marker' + prefix);
-    const arrow = document.getElementById('arrow' + prefix);
     const markerValue = document.getElementById('marker' + prefix + 'Value');
     const minValEl = document.getElementById('min' + prefix);
-    const minDateEl = document.getElementById('min' + prefix + 'Date');
     const maxValEl = document.getElementById('max' + prefix);
-    const maxDateEl = document.getElementById('max' + prefix + 'Date');
     const metaEl = document.getElementById('meta' + prefix);
     const deltaEl = document.getElementById('delta' + prefix);
 
@@ -1112,8 +982,7 @@
 
     if (points.length === 0) {
       markerValue.textContent = '—';
-      minValEl.textContent = '—'; minDateEl.textContent = '';
-      maxValEl.textContent = '—'; maxDateEl.textContent = '';
+      minValEl.textContent = '—'; maxValEl.textContent = '—';
       metaEl.textContent = 'Noch keine Daten vorhanden.';
       deltaEl.textContent = '';
       return null;
@@ -1132,25 +1001,12 @@
     const pct = span > 0 ? ((current.v - minPoint.v) / span) * 100 : 50;
     const clampedPct = Math.max(0, Math.min(100, pct));
 
-    // Pfeil bleibt immer exakt am wahren Datenpunkt.
-    arrow.style.left = clampedPct + '%';
-
-    // Text-Label wird nahe den Raendern anders verankert, damit es nie
-    // ueber die Karte hinausragt: links am Rand -> linksbuendig zum Pfeil
-    // (Text waechst nach rechts), rechts am Rand -> rechtsbuendig zum
-    // Pfeil (Text waechst nach links), sonst zentriert.
-    marker.style.left = clampedPct + '%';
-    marker.className = 'range-marker-value-wrap ' +
-      (clampedPct <= 15 ? 'align-left' : clampedPct >= 85 ? 'align-right' : 'align-center');
+    marker.style.bottom = clampedPct + '%';
     markerValue.textContent = fmtHydroVal(current.v, decimals) + unit;
 
     minValEl.textContent = fmtHydroVal(minPoint.v, decimals) + unit;
-    minDateEl.textContent = fmtHydroVal2Date(minPoint.date);
     maxValEl.textContent = fmtHydroVal(maxPoint.v, decimals) + unit;
-    maxDateEl.textContent = fmtHydroVal2Date(maxPoint.date);
 
-    // Delta vs. Vortag, zur aehnlichen Uhrzeit (Ziel: -24h, Toleranz 3h -
-    // passend zu Sammelabstaenden von ca. 6h).
     const target = new Date(current.date.getTime() - 24 * 3600 * 1000);
     const yesterday = findClosestToTime(points.slice(0, -1), target, 3 * 3600 * 1000);
     if (yesterday) {
@@ -1162,21 +1018,15 @@
       deltaEl.textContent = '';
     }
 
-    metaEl.textContent = 'Stand ' + fmtHydroDateTime(current.date) + ' Uhr · Min/Max seit Beginn der Aufzeichnung';
+    metaEl.textContent = 'Stand ' + fmtHydroDateTime(current.date) + ' Uhr';
     return current.date;
-  }
-
-  function fmtHydroVal2Date(date){
-    const dd = String(date.getDate()).padStart(2,'0');
-    const mm = String(date.getMonth()+1).padStart(2,'0');
-    return dd + '.' + mm + '.' + date.getFullYear();
   }
 
   async function initHydro(){
     const stations = {
-      Bodensee:  { stationId: '2043', key: 'water_level_m', unit: ' m',    decimals: 2, color: '#1F8A6E', chartId: 'chartBodensee' },
-      Rhein:     { stationId: '2288', key: 'discharge_m3s', unit: ' m³/s', decimals: 1, color: '#1F6FA8', chartId: 'chartRhein' },
-      Glatt:     { stationId: '2415', key: 'discharge_m3s', unit: ' m³/s', decimals: 2, color: '#8A5CC0', chartId: 'chartGlatt' }
+      Bodensee:  { stationId: '2043', key: 'water_level_m', unit: ' m',    decimals: 2, color: '#1F8A6E', chartId: 'chartBodensee', compareLabel: 'Bodensee (Pegel)' },
+      Rhein:     { stationId: '2288', key: 'discharge_m3s', unit: ' m³/s', decimals: 1, color: '#1F6FA8', chartId: 'chartRhein',    compareLabel: 'Rhein (Abfluss)' },
+      Glatt:     { stationId: '2415', key: 'discharge_m3s', unit: ' m³/s', decimals: 2, color: '#8A5CC0', chartId: 'chartGlatt',    compareLabel: 'Glatt (Abfluss)' }
     };
     const headerBadge = document.getElementById('hydroStandBadge');
 
@@ -1186,6 +1036,7 @@
       const data = await resp.json();
 
       let latestOverall = null;
+      const refDate = comparisonRefDate || new Date();
 
       Object.keys(stations).forEach(function(prefix){
         const cfg = stations[prefix];
@@ -1194,7 +1045,7 @@
           return Object.assign({}, r, { _date: parseISODateTime(r.time) });
         }) : [];
 
-        const latestDate = renderRangeBar(prefix, readings, cfg.key, cfg.decimals, cfg.unit, cfg.color);
+        const latestDate = renderVerticalBar(prefix, readings, cfg.key, cfg.decimals, cfg.unit, cfg.color);
         if (latestDate && (!latestOverall || latestDate > latestOverall)) latestOverall = latestDate;
 
         const chartEl = document.getElementById(cfg.chartId);
@@ -1203,6 +1054,8 @@
         } else {
           drawLineChart(chartEl, readings, cfg.key, { color: cfg.color, unit: cfg.unit, decimals: cfg.decimals, showTime: true });
         }
+
+        appendHydroComparisonRow(cfg.compareLabel, readings, cfg.key, cfg.decimals, cfg.unit, refDate);
       });
 
       headerBadge.textContent = latestOverall ? ('Stand ' + fmtHydroDateTime(latestOverall)) : '—';
@@ -1224,8 +1077,7 @@
     table.hidden = expanded;
   });
 
-  init();
-  initHydro();
+  init().then(initHydro);
 </script>
 
 </body>
