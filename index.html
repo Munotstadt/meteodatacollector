@@ -17,6 +17,7 @@
     --accent: #E30613;
     --gain: #1F8A6E;
     --loss: #C0293D;
+    --warn: #C2703D;
     --radius: 3px;
   }
   * { box-sizing: border-box; }
@@ -206,6 +207,12 @@
     background: var(--text); color: var(--bg); padding: 2px 6px; border-radius: 3px;
   }
   .hydro-card-meta{ font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 12px; text-align: center; }
+  .hydro-card.stale{ border-color: var(--warn); }
+  .stale-badge{
+    display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.04em; color: #fff; background: var(--warn);
+    padding: 2px 6px; border-radius: 3px; margin-top: 4px;
+  }
   .hydro-caption{
     font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted);
     margin-top: 10px;
@@ -256,7 +263,7 @@
   </div>
 
   <div class="hydro-cards" id="hydroCards">
-    <div class="hydro-card">
+    <div class="hydro-card" id="cardBodensee">
       <div class="hydro-card-head">
         <span class="hydro-card-label">Bodensee Berlingen — Pegel (m ü. M.)</span>
         <span class="hydro-card-delta" id="deltaBodensee"></span>
@@ -270,7 +277,7 @@
       <div class="hydro-card-meta" id="metaBodensee"></div>
     </div>
 
-    <div class="hydro-card">
+    <div class="hydro-card" id="cardRhein">
       <div class="hydro-card-head">
         <span class="hydro-card-label">Rhein Neuhausen — Abfluss (m³/s)</span>
         <span class="hydro-card-delta" id="deltaRhein"></span>
@@ -284,7 +291,7 @@
       <div class="hydro-card-meta" id="metaRhein"></div>
     </div>
 
-    <div class="hydro-card">
+    <div class="hydro-card" id="cardGlatt">
       <div class="hydro-card-head">
         <span class="hydro-card-label">Glatt Rheinsfelden — Abfluss (m³/s)</span>
         <span class="hydro-card-delta" id="deltaGlatt"></span>
@@ -967,6 +974,8 @@
     return null;
   }
 
+  const STALE_THRESHOLD_MS = 6 * 3600 * 1000; // 6 Stunden
+
   function renderVerticalBar(prefix, readings, key, decimals, unit, color) {
     const track = document.getElementById('track' + prefix);
     const marker = document.getElementById('marker' + prefix);
@@ -975,6 +984,7 @@
     const maxValEl = document.getElementById('max' + prefix);
     const metaEl = document.getElementById('meta' + prefix);
     const deltaEl = document.getElementById('delta' + prefix);
+    const cardEl = document.getElementById('card' + prefix);
 
     const points = readings
       .map(function(r){ return { v: r[key], date: r._date }; })
@@ -1018,7 +1028,12 @@
       deltaEl.textContent = '';
     }
 
-    metaEl.textContent = 'Stand ' + fmtHydroDateTime(current.date) + ' Uhr';
+    const ageMs = Date.now() - current.date.getTime();
+    const isStale = ageMs > STALE_THRESHOLD_MS;
+    if (cardEl) cardEl.classList.toggle('stale', isStale);
+    metaEl.innerHTML = 'Stand ' + fmtHydroDateTime(current.date) + ' Uhr' +
+      (isStale ? '<br><span class="stale-badge">⚠ Daten veraltet</span>' : '');
+
     return current.date;
   }
 
