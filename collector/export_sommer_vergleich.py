@@ -27,7 +27,7 @@ COLUMNS = [
     "sunshine_min", "radiation_wm2", "wind_mean_kmh", "wind_max_kmh", "humidity_pct",
 ]
 
-YEARS = [2003, 2026]
+YEARS = [2003, 2018, 2026]
 SUMMER_START_MD = (6, 1)   # 1. Juni
 SUMMER_END_MD = (8, 31)    # 31. August
 
