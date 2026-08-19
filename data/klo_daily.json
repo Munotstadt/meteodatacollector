@@ -2,7 +2,7 @@
   "station": "KLO",
   "station_name": "Zürich-Kloten",
   "source": "MeteoSchweiz (opendata.swiss) - Source: MeteoSchweiz",
-  "generated_at": "2026-08-19T06:55:03+00:00",
+  "generated_at": "2026-08-19T08:46:22+00:00",
   "fields": [
     "temp_mean_c",
     "temp_min_c",
