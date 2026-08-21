@@ -1,6 +1,6 @@
 {
   "source": "Bundesamt für Umwelt BAFU, LINDAS Linked Data Service - Source: BAFU",
-  "generated_at": "2026-08-21T01:45:57+00:00",
+  "generated_at": "2026-08-21T03:09:56+00:00",
   "stations": {
     "2288": {
       "name": "Rhein – Neuhausen",
@@ -1097,6 +1097,12 @@
           "discharge_m3s": 134.82,
           "water_level_m": 382.307,
           "water_temp_c": 21.15
+        },
+        {
+          "time": "2026-08-21T03:50:00+01:00",
+          "discharge_m3s": 136.076,
+          "water_level_m": 382.316,
+          "water_temp_c": 21.34
         }
       ]
     },
@@ -1828,6 +1834,12 @@
           "time": "2026-08-21T02:30:00+01:00",
           "discharge_m3s": null,
           "water_level_m": 394.37,
+          "water_temp_c": null
+        },
+        {
+          "time": "2026-08-21T03:50:00+01:00",
+          "discharge_m3s": null,
+          "water_level_m": 394.371,
           "water_temp_c": null
         }
       ]
@@ -2993,6 +3005,12 @@
           "discharge_m3s": 1.966,
           "water_level_m": 335.415,
           "water_temp_c": 20.73
+        },
+        {
+          "time": "2026-08-21T03:50:00+01:00",
+          "discharge_m3s": 1.966,
+          "water_level_m": 335.415,
+          "water_temp_c": 20.61
         }
       ]
     }
