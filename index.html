@@ -728,12 +728,14 @@
     }
 
     const midPoint = points[Math.floor(points.length / 2)];
-    const xLabels = [points[0], midPoint, points[points.length - 1]].map(function(p){
+    const xLabelPoints = [points[0], midPoint, points[points.length - 1]];
+    const xLabels = xLabelPoints.map(function(p, i){
       const x = xScale(p.dt.getTime());
       const dd = String(p.dt.getDate()).padStart(2,'0');
       const mm = String(p.dt.getMonth()+1).padStart(2,'0');
       const label = dd + '.' + mm + '.' + p.dt.getFullYear();
-      return '<text x="' + x.toFixed(1) + '" y="' + (height - 8) + '" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="#767E8A">' + label + '</text>';
+      const anchor = i === 0 ? 'start' : (i === xLabelPoints.length - 1 ? 'end' : 'middle');
+      return '<text x="' + x.toFixed(1) + '" y="' + (height - 8) + '" text-anchor="' + anchor + '" font-family="IBM Plex Mono, monospace" font-size="10" fill="#767E8A">' + label + '</text>';
     }).join('');
 
     const bandSvg = bandPath ? '<path d="' + bandPath + '" fill="' + lineColor + '" opacity="0.10" stroke="none" />' : '';
@@ -811,12 +813,14 @@
     }
 
     const midPoint = points[Math.floor(points.length / 2)];
-    const xLabels = [points[0], midPoint, points[points.length - 1]].map(function(p){
+    const xLabelPoints = [points[0], midPoint, points[points.length - 1]];
+    const xLabels = xLabelPoints.map(function(p, i){
       const x = xScale(p.dt.getTime());
       const dd = String(p.dt.getDate()).padStart(2,'0');
       const mm = String(p.dt.getMonth()+1).padStart(2,'0');
       const label = dd + '.' + mm + '.' + p.dt.getFullYear();
-      return '<text x="' + x.toFixed(1) + '" y="' + (height - 8) + '" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="#767E8A">' + label + '</text>';
+      const anchor = i === 0 ? 'start' : (i === xLabelPoints.length - 1 ? 'end' : 'middle');
+      return '<text x="' + x.toFixed(1) + '" y="' + (height - 8) + '" text-anchor="' + anchor + '" font-family="IBM Plex Mono, monospace" font-size="10" fill="#767E8A">' + label + '</text>';
     }).join('');
 
     const registryPoints = points.map(function(p){
