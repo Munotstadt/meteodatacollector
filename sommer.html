@@ -17,19 +17,36 @@
     --accent: #E30613;
     --hi-red: #C0293D;
     --lo-blue: #1F6FA8;
-    --radius: 3px;
+    --grey-100: #F4F4F4;
+    --radius: 6px;
   }
   *{ box-sizing: border-box; }
   body{
     margin: 0; background: var(--bg); color: var(--text);
     font-family: 'Inter', system-ui, sans-serif;
     min-height: 100vh; display: flex; flex-direction: column; align-items: center;
-    padding: 48px 20px 80px;
+    padding: 0 0 80px;
   }
+  header.topbar{
+    width: 100%; box-sizing: border-box;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; border-bottom: 2px solid var(--text);
+    max-width: 880px; margin: 0 auto;
+  }
+  header.topbar .brand{ font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; }
+  header.topbar .brand span{ color: var(--accent); }
+  nav.tabs{ display: flex; gap: 4px; }
+  nav.tabs a{
+    text-decoration: none; color: var(--text); font-size: 13px; font-weight: 500;
+    padding: 7px 12px; border-radius: var(--radius); font-family: 'Inter', sans-serif;
+  }
+  nav.tabs a.active, nav.tabs a:hover{ background: var(--grey-100); }
+
+  main.page-main{ width: 100%; max-width: 880px; padding: 32px 20px 0; }
   .page{ width: 100%; max-width: 880px; }
 
   .eyebrow{
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center; justify-content: flex-end;
     padding-bottom: 18px; border-bottom: 2px solid var(--accent);
   }
   .brand h1{
@@ -83,9 +100,17 @@
 </head>
 <body>
 
+<header class="topbar">
+  <div class="brand">Munotstadt <span>Meteo</span></div>
+  <nav class="tabs">
+    <a href="index.html">Übersicht</a>
+    <a href="sommer.html" class="active">Sommervergleich</a>
+  </nav>
+</header>
+
+<main class="page-main">
 <div class="page">
   <div class="eyebrow">
-    <div class="brand"><h1>Meteo Data</h1></div>
     <a class="back-link" href="./index.html">&larr; zurück</a>
   </div>
 
@@ -122,6 +147,7 @@
     </div>
   </div>
 </div>
+</main>
 
 <script>
   const DATA_URL = "./data/sommer_vergleich.json";

@@ -18,19 +18,36 @@
     --gain: #1F8A6E;
     --loss: #C0293D;
     --warn: #C2703D;
-    --radius: 3px;
+    --grey-100: #F4F4F4;
+    --radius: 6px;
   }
   * { box-sizing: border-box; }
   body{
     margin: 0; background: var(--bg); color: var(--text);
     font-family: 'Inter', system-ui, sans-serif;
     min-height: 100vh; display: flex; flex-direction: column; align-items: center;
-    padding: 48px 20px 80px;
+    padding: 0 0 80px;
   }
+  header.topbar{
+    width: 100%; box-sizing: border-box;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; border-bottom: 2px solid var(--text);
+    max-width: 880px; margin: 0 auto;
+  }
+  header.topbar .brand{ font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; }
+  header.topbar .brand span{ color: var(--accent); }
+  nav.tabs{ display: flex; gap: 4px; }
+  nav.tabs a{
+    text-decoration: none; color: var(--text); font-size: 13px; font-weight: 500;
+    padding: 7px 12px; border-radius: var(--radius); font-family: 'Inter', sans-serif;
+  }
+  nav.tabs a.active, nav.tabs a:hover{ background: var(--grey-100); }
+
+  main.detail-main{ width: 100%; max-width: 880px; padding: 32px 20px 0; }
   .detail{ width: 100%; max-width: 880px; }
 
   .eyebrow{
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center; justify-content: flex-end;
     padding-bottom: 18px; border-bottom: 2px solid var(--accent);
   }
   .brand{ display: flex; align-items: baseline; gap: 10px; }
@@ -73,7 +90,7 @@
 
   .detail-header{
     display: flex; align-items: baseline; justify-content: space-between;
-    padding-bottom: 18px; border-bottom: 2px solid var(--accent);
+    padding-bottom: 18px; border-bottom: 1px solid var(--line);
   }
   .detail-header h2{ font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; margin: 0; }
   .stand-badge{
@@ -165,6 +182,10 @@
     margin-top: 22px; display: flex; align-items: center; justify-content: space-between;
     font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); flex-wrap: wrap; gap: 6px;
   }
+  .footer-note{
+    margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line);
+    font-family: 'Inter', sans-serif; font-size: 12px; line-height: 1.5; color: var(--muted);
+  }
 
   .hydro-cards{ display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
   .hydro-section-header{
@@ -189,7 +210,8 @@
   .hydro-card-delta.flat{ color: var(--muted); }
 
   .vbar-max-label, .vbar-min-label{
-    font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; color: var(--text);
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: var(--text);
+    white-space: nowrap;
   }
   .vbar-track-wrap{ position: relative; width: 12px; height: 140px; margin: 6px 0; }
   .vbar-track{
@@ -231,9 +253,17 @@
 </head>
 <body>
 
+<header class="topbar">
+  <div class="brand">Munotstadt <span>Meteo</span></div>
+  <nav class="tabs">
+    <a href="index.html" class="active">Übersicht</a>
+    <a href="sommer.html">Sommervergleich</a>
+  </nav>
+</header>
+
+<main class="detail-main">
 <div class="detail" id="detailView">
   <div class="eyebrow">
-    <div class="brand"><h1>Meteo Data</h1></div>
     <div class="status">
       <span class="dot" id="statusDot"></span>
       <span id="statusText">connecting…</span>
@@ -329,11 +359,38 @@
     </tbody>
   </table>
 
-  <h2 class="section-heading" style="margin-top:36px;">Diagramme</h2>
+  <div class="history-title" style="margin-top:32px;">Vergleich — Monatsmittel (20-Jahres-Klimatologie)</div>
+  <div style="overflow-x:auto;">
+    <table id="climatologyTable">
+      <thead>
+        <tr>
+          <th>Kennzahl</th>
+          <th class="num">Ø akt. Monat</th>
+          <th class="num">Jan</th>
+          <th class="num">Feb</th>
+          <th class="num">Mär</th>
+          <th class="num">Apr</th>
+          <th class="num">Mai</th>
+          <th class="num">Jun</th>
+          <th class="num">Jul</th>
+          <th class="num">Aug</th>
+          <th class="num">Sep</th>
+          <th class="num">Okt</th>
+          <th class="num">Nov</th>
+          <th class="num">Dez</th>
+        </tr>
+      </thead>
+      <tbody id="climatologyBody">
+        <tr><td colspan="13" class="empty">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="section-heading" style="margin-top:36px;">Charts und Diagramme</h2>
 
   <div class="range-row" id="rangeSelector">
-    <button type="button" class="range-btn" data-range="30D">30 Tage</button>
-    <button type="button" class="range-btn active" data-range="90D">90 Tage</button>
+    <button type="button" class="range-btn active" data-range="30D">30 Tage</button>
+    <button type="button" class="range-btn" data-range="90D">90 Tage</button>
     <button type="button" class="range-btn" data-range="12M">1 Jahr</button>
     <button type="button" class="range-btn" data-range="3Y">3 Jahre</button>
     <span class="range-sep"></span>
@@ -405,7 +462,11 @@
     <span>Daten: MeteoSchweiz (KLO) · Source: MeteoSchweiz · Hydrodaten: Bundesamt für Umwelt BAFU (LINDAS) - Source: BAFU</span>
     <span id="detailMeta">—</span>
   </div>
+  <div class="footer-note">
+    Ein automatisierter Collector (GitHub Actions) ruft alle 2 Stunden die Rohdaten von MeteoSchweiz und BAFU ab und schreibt sie in die Cloud-Datenbank (Turso). Bei jedem Lauf wird zusätzlich ein statischer JSON-Snapshot exportiert und in dieses Repository committed — dadurch aktualisiert sich diese Seite automatisch, ohne dass ein Server zur Laufzeit angefragt wird. Die hier angezeigten Werte sind somit maximal 2 Stunden alt.
+  </div>
 </div>
+</main>
 
 <script>
   const DATA_URL = "./data/klo_daily.json";
@@ -828,6 +889,43 @@
     }).join('');
   }
 
+  function monthAvg(days, monthIndex, getValue, yearFilter){
+    const vals = [];
+    for (let i = 0; i < days.length; i++) {
+      const d = days[i];
+      if (d._date.getMonth() === monthIndex && (!yearFilter || yearFilter(d._date))) {
+        const v = getValue(d);
+        if (v != null) vals.push(v);
+      }
+    }
+    if (vals.length === 0) return null;
+    return vals.reduce(function(a, b){ return a + b; }, 0) / vals.length;
+  }
+
+  function buildClimatologyRow(label, getValue, decimals, unit, days, refDate){
+    const monthStart = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
+    const currentMonthAvg = periodAvg(days, monthStart, refDate, getValue);
+
+    let cells = '<td class="price">' + fmtCompVal(currentMonthAvg, decimals, unit) + '</td>';
+    for (let m = 0; m < 12; m++) {
+      const avg = monthAvg(days, m, getValue);
+      cells += '<td class="price">' + fmtCompVal(avg, decimals, unit) + '</td>';
+    }
+    return '<tr><td class="name">' + label + '</td>' + cells + '</tr>';
+  }
+
+  function renderClimatologyTable(days, refDate){
+    const metrics = [
+      { label: 'Temperatur', unit: '°C', decimals: 1, get: function(d){ return d.temp_mean_c; } },
+      { label: 'Sonnenschein', unit: ' h', decimals: 1, get: function(d){ return d.sunshine_min != null ? d.sunshine_min / 60 : null; } },
+      { label: 'Niederschlag', unit: ' mm', decimals: 1, get: function(d){ return d.precip_mm; } },
+      { label: 'Globalstrahlung', unit: ' W/m²', decimals: 0, get: function(d){ return d.radiation_wm2; } },
+    ];
+    document.getElementById('climatologyBody').innerHTML = metrics.map(function(m){
+      return buildClimatologyRow(m.label, m.get, m.decimals, m.unit, days, refDate);
+    }).join('');
+  }
+
   function appendHydroComparisonRow(label, readings, key, decimals, unit, refDate){
     const rowHtml = buildComparisonRow(label, function(r){ return r[key]; }, decimals, unit, readings, refDate);
     document.getElementById('comparisonBody').insertAdjacentHTML('beforeend', rowHtml);
@@ -867,7 +965,7 @@
 
       comparisonRefDate = latest._date;
 
-      let currentRange = '90D';
+      let currentRange = '30D';
       let customFrom = null, customTo = null;
       const chartContainers = {
         Temp: document.getElementById('chartTemp'),
@@ -924,6 +1022,7 @@
 
       renderCharts();
       renderComparisonTable(days, latest._date);
+      renderClimatologyTable(days, latest._date);
 
       const sortedDesc = days.slice().sort(function(a, b){ return b._date - a._date; }).slice(0, 30);
       document.getElementById('historyBody').innerHTML = sortedDesc.map(function(d){
@@ -962,6 +1061,12 @@
     const hh = String(date.getHours()).padStart(2,'0');
     const mi = String(date.getMinutes()).padStart(2,'0');
     return dd + '.' + mm + '.' + date.getFullYear() + ' ' + hh + ':' + mi;
+  }
+
+  function fmtHydroShortDate(date){
+    const dd = String(date.getDate()).padStart(2,'0');
+    const mm = String(date.getMonth()+1).padStart(2,'0');
+    return dd + '.' + mm + '.';
   }
 
   function findClosestToTime(points, target, toleranceMs){
@@ -1014,8 +1119,8 @@
     marker.style.bottom = clampedPct + '%';
     markerValue.textContent = fmtHydroVal(current.v, decimals) + unit;
 
-    minValEl.textContent = fmtHydroVal(minPoint.v, decimals) + unit;
-    maxValEl.textContent = fmtHydroVal(maxPoint.v, decimals) + unit;
+    minValEl.textContent = fmtHydroVal(minPoint.v, decimals) + unit + ' (' + fmtHydroShortDate(minPoint.date) + ')';
+    maxValEl.textContent = fmtHydroVal(maxPoint.v, decimals) + unit + ' (' + fmtHydroShortDate(maxPoint.date) + ')';
 
     const target = new Date(current.date.getTime() - 24 * 3600 * 1000);
     const yesterday = findClosestToTime(points.slice(0, -1), target, 3 * 3600 * 1000);
