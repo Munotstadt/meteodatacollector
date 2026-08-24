@@ -32,7 +32,7 @@
     width: 100%; box-sizing: border-box;
     display: flex; align-items: center; justify-content: space-between;
     padding: 14px 20px; border-bottom: 2px solid var(--text);
-    max-width: 880px; margin: 0 auto;
+    max-width: 1200px; margin: 0 auto;
   }
   header.topbar .brand{ font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; }
   header.topbar .brand span{ color: var(--accent); }
@@ -43,8 +43,8 @@
   }
   nav.tabs a.active, nav.tabs a:hover{ background: var(--grey-100); }
 
-  main.detail-main{ width: 100%; max-width: 880px; padding: 32px 20px 0; }
-  .detail{ width: 100%; max-width: 880px; }
+  main.detail-main{ width: 100%; max-width: 1200px; padding: 32px 20px 0; }
+  .detail{ width: 100%; max-width: 1200px; }
 
   .eyebrow{
     display: flex; align-items: center; justify-content: flex-end;
@@ -79,6 +79,21 @@
   .time{ color: var(--muted); font-size: 13px; text-align: left; }
   .name{ font-weight: 500; }
   .chg{ font-family: 'IBM Plex Mono', monospace; text-align: right; white-space: nowrap; font-size: 13px; }
+
+  .table-scroll{
+    overflow-x: scroll; -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin; scrollbar-color: var(--line) transparent;
+    margin-top: 4px;
+  }
+  .table-scroll::-webkit-scrollbar{ height: 8px; }
+  .table-scroll::-webkit-scrollbar-track{ background: var(--panel); }
+  .table-scroll::-webkit-scrollbar-thumb{ background: var(--line); border-radius: 4px; }
+  .table-scroll table{ margin-top: 0; }
+  .table-scroll th:first-child, .table-scroll td:first-child{
+    position: sticky; left: 0; background: var(--bg); z-index: 1;
+    box-shadow: 1px 0 0 var(--line);
+  }
+  .price.current{ font-weight: 700; color: var(--text); }
   .chg.up{ color: var(--gain); }
   .chg.down{ color: var(--loss); }
   .chg.flat{ color: var(--muted); }
@@ -340,32 +355,34 @@
   <hr class="section-divider">
 
   <div class="history-title">Vergleich — Tagesdurchschnitte</div>
-  <table id="comparisonTable">
-    <thead>
-      <tr>
-        <th>Kennzahl</th>
-        <th class="num">Ø 7 Tage</th>
-        <th class="num">Δ Vorwoche</th>
-        <th class="num">Ø Monat</th>
-        <th class="num">Δ Vorjahr</th>
-        <th class="num">Ø YTD</th>
-        <th class="num">Δ Vorjahr</th>
-        <th class="num">Ø 360 Tage</th>
-        <th class="num">Δ P360 Tage</th>
-      </tr>
-    </thead>
-    <tbody id="comparisonBody">
-      <tr><td colspan="9" class="empty">Loading…</td></tr>
-    </tbody>
-  </table>
+  <div class="table-scroll">
+    <table id="comparisonTable">
+      <thead>
+        <tr>
+          <th>Kennzahl</th>
+          <th class="num">Ø 7 Tage</th>
+          <th class="num">Δ Vorwoche</th>
+          <th class="num">Ø Monat</th>
+          <th class="num">Δ Vorjahr</th>
+          <th class="num">Ø YTD</th>
+          <th class="num">Δ Vorjahr</th>
+          <th class="num">Ø 360 Tage</th>
+          <th class="num">Δ P360 Tage</th>
+        </tr>
+      </thead>
+      <tbody id="comparisonBody">
+        <tr><td colspan="9" class="empty">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
 
   <div class="history-title" style="margin-top:32px;">Vergleich — Monatsmittel (20-Jahres-Klimatologie)</div>
-  <div style="overflow-x:auto;">
+  <div class="table-scroll">
     <table id="climatologyTable">
       <thead>
         <tr>
           <th>Kennzahl</th>
-          <th class="num">Ø akt. Monat</th>
+          <th class="num">Ø 30 Tage</th>
           <th class="num">Jan</th>
           <th class="num">Feb</th>
           <th class="num">Mär</th>
@@ -521,7 +538,7 @@
     return days.filter(function(d){ return d._date >= cutoff; });
   }
 
-  function fmtPointLabel(dt, v, opts){
+  function fmtPointLabel(dt, v, opts, band){
     const dd = String(dt.getDate()).padStart(2,'0');
     const mm = String(dt.getMonth()+1).padStart(2,'0');
     let label = dd + '.' + mm + '.' + dt.getFullYear();
@@ -532,7 +549,13 @@
     }
     const decimals = opts.decimals != null ? opts.decimals : 1;
     const valStr = v.toLocaleString('de-CH', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
-    return label + ': ' + valStr + (opts.unit || '');
+    let out = label + ': ' + valStr + (opts.unit || '');
+    if (band) {
+      const loStr = band.lo.toLocaleString('de-CH', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+      const hiStr = band.hi.toLocaleString('de-CH', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+      out += ' (Min ' + loStr + (opts.unit || '') + ' / Max ' + hiStr + (opts.unit || '') + ')';
+    }
+    return out;
   }
 
   const chartRegistry = {};
@@ -715,8 +738,14 @@
 
     const bandSvg = bandPath ? '<path d="' + bandPath + '" fill="' + lineColor + '" opacity="0.10" stroke="none" />' : '';
 
+    const bandByTime = {};
+    if (bandPoints) {
+      bandPoints.forEach(function(p){ bandByTime[p.dt.getTime()] = p; });
+    }
+
     const registryPoints = points.map(function(p){
-      return { x: xScale(p.dt.getTime()), y: yScale(p.v), label: fmtPointLabel(p.dt, p.v, opts) };
+      const band = bandByTime[p.dt.getTime()];
+      return { x: xScale(p.dt.getTime()), y: yScale(p.v), label: fmtPointLabel(p.dt, p.v, opts, band) };
     });
 
     const svg = '<svg viewBox="0 0 ' + width + ' ' + height + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Zeitreihe" class="chart-svg">' +
@@ -822,15 +851,19 @@
     return vals.reduce(function(a, b){ return a + b; }, 0) / vals.length;
   }
 
-  function fmtCompVal(v, decimals, unit){
-    return v == null ? '—' : v.toFixed(decimals) + unit;
+  function fmtCompVal(v, decimals){
+    return v == null ? '—' : v.toFixed(decimals);
   }
 
-  function fmtCompDelta(current, reference, decimals, unit){
+  function fmtCompDelta(current, reference, decimals){
     if (current == null || reference == null) return { text: '—', dir: 'flat' };
     const diff = current - reference;
     const dir = diff > 0.05 ? 'up' : diff < -0.05 ? 'down' : 'flat';
-    return { text: (diff > 0 ? '+' : '') + diff.toFixed(decimals) + unit, dir: dir };
+    return { text: (diff > 0 ? '+' : '') + diff.toFixed(decimals), dir: dir };
+  }
+
+  function unitLabel(label, unit){
+    return unit ? (label + ' (' + unit.trim() + ')') : label;
   }
 
   function buildComparisonRow(label, getValue, decimals, unit, dataset, refDate){
@@ -859,20 +892,20 @@
     const p1 = periodAvg(dataset, last360Start, last360End, getValue);
     const p0 = periodAvg(dataset, prior360Start, prior360End, getValue);
 
-    const wDelta = fmtCompDelta(w1, w0, decimals, unit);
-    const moDelta = fmtCompDelta(mo1, mo0, decimals, unit);
-    const yDelta = fmtCompDelta(y1, y0, decimals, unit);
-    const pDelta = fmtCompDelta(p1, p0, decimals, unit);
+    const wDelta = fmtCompDelta(w1, w0, decimals);
+    const moDelta = fmtCompDelta(mo1, mo0, decimals);
+    const yDelta = fmtCompDelta(y1, y0, decimals);
+    const pDelta = fmtCompDelta(p1, p0, decimals);
 
     return '<tr>' +
-      '<td class="name">' + label + '</td>' +
-      '<td class="price">' + fmtCompVal(w1, decimals, unit) + '</td>' +
+      '<td class="name">' + unitLabel(label, unit) + '</td>' +
+      '<td class="price">' + fmtCompVal(w1, decimals) + '</td>' +
       '<td class="chg ' + wDelta.dir + '">' + wDelta.text + '</td>' +
-      '<td class="price">' + fmtCompVal(mo1, decimals, unit) + '</td>' +
+      '<td class="price">' + fmtCompVal(mo1, decimals) + '</td>' +
       '<td class="chg ' + moDelta.dir + '">' + moDelta.text + '</td>' +
-      '<td class="price">' + fmtCompVal(y1, decimals, unit) + '</td>' +
+      '<td class="price">' + fmtCompVal(y1, decimals) + '</td>' +
       '<td class="chg ' + yDelta.dir + '">' + yDelta.text + '</td>' +
-      '<td class="price">' + fmtCompVal(p1, decimals, unit) + '</td>' +
+      '<td class="price">' + fmtCompVal(p1, decimals) + '</td>' +
       '<td class="chg ' + pDelta.dir + '">' + pDelta.text + '</td>' +
     '</tr>';
   }
@@ -880,9 +913,9 @@
   function renderComparisonTable(days, refDate){
     const metrics = [
       { label: 'Temperatur', unit: '°C', decimals: 1, get: function(d){ return d.temp_mean_c; } },
-      { label: 'Sonnenschein', unit: ' h', decimals: 1, get: function(d){ return d.sunshine_min != null ? d.sunshine_min / 60 : null; } },
-      { label: 'Niederschlag', unit: ' mm', decimals: 1, get: function(d){ return d.precip_mm; } },
-      { label: 'Globalstrahlung', unit: ' W/m²', decimals: 0, get: function(d){ return d.radiation_wm2; } },
+      { label: 'Sonnenschein', unit: 'h', decimals: 1, get: function(d){ return d.sunshine_min != null ? d.sunshine_min / 60 : null; } },
+      { label: 'Niederschlag', unit: 'mm', decimals: 1, get: function(d){ return d.precip_mm; } },
+      { label: 'Globalstrahlung', unit: 'W/m²', decimals: 0, get: function(d){ return d.radiation_wm2; } },
     ];
     document.getElementById('comparisonBody').innerHTML = metrics.map(function(m){
       return buildComparisonRow(m.label, m.get, m.decimals, m.unit, days, refDate);
@@ -903,23 +936,23 @@
   }
 
   function buildClimatologyRow(label, getValue, decimals, unit, days, refDate){
-    const monthStart = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
-    const currentMonthAvg = periodAvg(days, monthStart, refDate, getValue);
+    const last30Start = addDays(refDate, -29), last30End = refDate;
+    const last30Avg = periodAvg(days, last30Start, last30End, getValue);
 
-    let cells = '<td class="price">' + fmtCompVal(currentMonthAvg, decimals, unit) + '</td>';
+    let cells = '<td class="price current">' + fmtCompVal(last30Avg, decimals) + '</td>';
     for (let m = 0; m < 12; m++) {
       const avg = monthAvg(days, m, getValue);
-      cells += '<td class="price">' + fmtCompVal(avg, decimals, unit) + '</td>';
+      cells += '<td class="price">' + fmtCompVal(avg, decimals) + '</td>';
     }
-    return '<tr><td class="name">' + label + '</td>' + cells + '</tr>';
+    return '<tr><td class="name">' + unitLabel(label, unit) + '</td>' + cells + '</tr>';
   }
 
   function renderClimatologyTable(days, refDate){
     const metrics = [
       { label: 'Temperatur', unit: '°C', decimals: 1, get: function(d){ return d.temp_mean_c; } },
-      { label: 'Sonnenschein', unit: ' h', decimals: 1, get: function(d){ return d.sunshine_min != null ? d.sunshine_min / 60 : null; } },
-      { label: 'Niederschlag', unit: ' mm', decimals: 1, get: function(d){ return d.precip_mm; } },
-      { label: 'Globalstrahlung', unit: ' W/m²', decimals: 0, get: function(d){ return d.radiation_wm2; } },
+      { label: 'Sonnenschein', unit: 'h', decimals: 1, get: function(d){ return d.sunshine_min != null ? d.sunshine_min / 60 : null; } },
+      { label: 'Niederschlag', unit: 'mm', decimals: 1, get: function(d){ return d.precip_mm; } },
+      { label: 'Globalstrahlung', unit: 'W/m²', decimals: 0, get: function(d){ return d.radiation_wm2; } },
     ];
     document.getElementById('climatologyBody').innerHTML = metrics.map(function(m){
       return buildClimatologyRow(m.label, m.get, m.decimals, m.unit, days, refDate);
@@ -929,6 +962,11 @@
   function appendHydroComparisonRow(label, readings, key, decimals, unit, refDate){
     const rowHtml = buildComparisonRow(label, function(r){ return r[key]; }, decimals, unit, readings, refDate);
     document.getElementById('comparisonBody').insertAdjacentHTML('beforeend', rowHtml);
+  }
+
+  function appendHydroClimatologyRow(label, readings, key, decimals, unit, refDate){
+    const rowHtml = buildClimatologyRow(label, function(r){ return r[key]; }, decimals, unit, readings, refDate);
+    document.getElementById('climatologyBody').insertAdjacentHTML('beforeend', rowHtml);
   }
 
   async function init() {
@@ -1144,9 +1182,9 @@
 
   async function initHydro(){
     const stations = {
-      Bodensee:  { stationId: '2043', key: 'water_level_m', unit: ' m',    decimals: 2, color: '#1F8A6E', chartId: 'chartBodensee', compareLabel: 'Bodensee (Pegel)' },
-      Rhein:     { stationId: '2288', key: 'discharge_m3s', unit: ' m³/s', decimals: 1, color: '#1F6FA8', chartId: 'chartRhein',    compareLabel: 'Rhein (Abfluss)' },
-      Glatt:     { stationId: '2415', key: 'discharge_m3s', unit: ' m³/s', decimals: 2, color: '#8A5CC0', chartId: 'chartGlatt',    compareLabel: 'Glatt (Abfluss)' }
+      Bodensee:  { stationId: '2043', key: 'water_level_m', unit: ' m',    decimals: 2, color: '#1F8A6E', chartId: 'chartBodensee', compareLabel: 'Bodensee — Pegel' },
+      Rhein:     { stationId: '2288', key: 'discharge_m3s', unit: ' m³/s', decimals: 1, color: '#1F6FA8', chartId: 'chartRhein',    compareLabel: 'Rhein — Abfluss' },
+      Glatt:     { stationId: '2415', key: 'discharge_m3s', unit: ' m³/s', decimals: 2, color: '#8A5CC0', chartId: 'chartGlatt',    compareLabel: 'Glatt — Abfluss' }
     };
     const headerBadge = document.getElementById('hydroStandBadge');
 
@@ -1176,6 +1214,7 @@
         }
 
         appendHydroComparisonRow(cfg.compareLabel, readings, cfg.key, cfg.decimals, cfg.unit, refDate);
+        appendHydroClimatologyRow(cfg.compareLabel, readings, cfg.key, cfg.decimals, cfg.unit, refDate);
       });
 
       headerBadge.textContent = latestOverall ? ('Stand ' + fmtHydroDateTime(latestOverall)) : '—';
