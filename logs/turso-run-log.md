@@ -1,5 +1,6 @@
 | Workflow | Datum/Zeit (UTC) | Trigger | Run |
 |---|---|---|---|
+| Collect MeteoSwiss + BAFU data (Turso) | 05.09.2026 22:00:23 | Scheduled | [#289 ↗](https://github.com/Munotstadt/meteodatacollector/actions/runs/33994637518) |
 | Collect MeteoSwiss + BAFU data (Turso) | 05.09.2026 18:04:29 | Scheduled | [#288 ↗](https://github.com/Munotstadt/meteodatacollector/actions/runs/33982894204) |
 | Collect MeteoSwiss + BAFU data (Turso) | 05.09.2026 14:59:00 | Scheduled | [#287 ↗](https://github.com/Munotstadt/meteodatacollector/actions/runs/33973396129) |
 | Collect MeteoSwiss + BAFU data (Turso) | 05.09.2026 10:24:43 | Scheduled | [#286 ↗](https://github.com/Munotstadt/meteodatacollector/actions/runs/33960570872) |
@@ -199,4 +200,3 @@
 | Collect MeteoSwiss + BAFU data (Turso) | 14.08.2026 09:13:40 | Scheduled | [#92 ↗](https://github.com/Munotstadt/meteodatacollector/actions/runs/31787162994) |
 | Collect MeteoSwiss + BAFU data (Turso) | 14.08.2026 07:42:04 | Scheduled | [#91 ↗](https://github.com/Munotstadt/meteodatacollector/actions/runs/31780923458) |
 | Collect MeteoSwiss + BAFU data (Turso) | 14.08.2026 05:42:23 | Scheduled | [#90 ↗](https://github.com/Munotstadt/meteodatacollector/actions/runs/31773830391) |
-| Collect MeteoSwiss + BAFU data (Turso) | 14.08.2026 02:29:50 | Scheduled | [#89 ↗](https://github.com/Munotstadt/meteodatacollector/actions/runs/31763887287) |
