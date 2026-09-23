@@ -2,7 +2,7 @@
   "station": "KLO",
   "station_name": "Zürich-Kloten",
   "source": "MeteoSchweiz (opendata.swiss) - Source: MeteoSchweiz",
-  "generated_at": "2026-09-23T11:17:58+00:00",
+  "generated_at": "2026-09-23T16:39:52+00:00",
   "fields": [
     "temp_mean_c",
     "temp_min_c",
@@ -87668,7 +87668,7 @@
       "temp_mean_c": 13.7,
       "temp_min_c": 5.6,
       "temp_max_c": 21.3,
-      "precip_mm": null,
+      "precip_mm": 0.0,
       "sunshine_min": 684.0,
       "radiation_wm2": 215.0,
       "wind_mean_kmh": 11.5,
