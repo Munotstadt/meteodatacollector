@@ -2,7 +2,7 @@
   "station": "KLO",
   "station_name": "Zürich-Kloten",
   "source": "MeteoSchweiz (opendata.swiss) - Source: MeteoSchweiz",
-  "generated_at": "2026-10-10T23:23:15+00:00",
+  "generated_at": "2026-10-11T05:23:09+00:00",
   "fields": [
     "temp_mean_c",
     "temp_min_c",
@@ -15,18 +15,6 @@
     "humidity_pct"
   ],
   "days": [
-    {
-      "date": "2006-10-10",
-      "temp_mean_c": 11.7,
-      "temp_min_c": 7.0,
-      "temp_max_c": 19.7,
-      "precip_mm": 0.3,
-      "sunshine_min": 398.0,
-      "radiation_wm2": 132.0,
-      "wind_mean_kmh": 2.5,
-      "wind_max_kmh": 12.6,
-      "humidity_pct": 89.9
-    },
     {
       "date": "2006-10-11",
       "temp_mean_c": 11.8,
@@ -87668,12 +87656,24 @@
       "temp_mean_c": 11.3,
       "temp_min_c": 9.3,
       "temp_max_c": 16.0,
-      "precip_mm": null,
+      "precip_mm": 0.6,
       "sunshine_min": 308.0,
       "radiation_wm2": 148.0,
       "wind_mean_kmh": 6.8,
       "wind_max_kmh": 27.0,
       "humidity_pct": 79.8
+    },
+    {
+      "date": "2026-10-10",
+      "temp_mean_c": 11.7,
+      "temp_min_c": 7.8,
+      "temp_max_c": 14.3,
+      "precip_mm": null,
+      "sunshine_min": 6.0,
+      "radiation_wm2": 50.0,
+      "wind_mean_kmh": 9.7,
+      "wind_max_kmh": 33.5,
+      "humidity_pct": 88.2
     }
   ]
 }
